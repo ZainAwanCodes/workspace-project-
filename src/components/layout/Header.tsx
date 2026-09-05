@@ -90,11 +90,8 @@ export const Header = () => {
                   <DropdownItem key={notif!.id} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 p-3">
                     <div className="flex flex-col">
                       <span className={`text-sm ${notif!.isRead ? 'text-gray-500' : 'text-gray-900 dark:text-gray-100 font-medium'}`}>
-                        {notif!.title}
+                        {notif!.message}
                       </span>
-                      {notif!.description && (
-                        <span className="text-xs text-gray-500 mt-0.5">{notif!.description}</span>
-                      )}
                       <span className="text-[10px] text-gray-400 mt-1">
                         {formatDistanceToNow(new Date(notif!.createdAt), { addSuffix: true })}
                       </span>

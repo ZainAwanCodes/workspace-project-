@@ -114,6 +114,12 @@ const taskSlice = createSlice({
         task.attachments.push(action.payload.attachment);
       }
     },
+    removeAttachment: (state, action: PayloadAction<{ taskId: string; attachmentId: string }>) => {
+      const task = state.entities[action.payload.taskId];
+      if (task) {
+        task.attachments = task.attachments.filter(a => a.id !== action.payload.attachmentId);
+      }
+    },
     addComment: (state, action: PayloadAction<{ taskId: string; comment: Comment }>) => {
       const task = state.entities[action.payload.taskId];
       if (task) {
@@ -127,7 +133,7 @@ export const {
   addTask, updateTask, removeTask, moveTaskStatus,
   addSubtask, updateSubtask, removeSubtask, convertSubtaskToTask,
   duplicateTask, bulkUpdateTasks, bulkRemoveTasks,
-  addAttachment, addComment
+  addAttachment, removeAttachment, addComment
 } = taskSlice.actions;
 
 export default taskSlice.reducer;

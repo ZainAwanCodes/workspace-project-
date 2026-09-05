@@ -13,6 +13,7 @@ import { CommentThread } from './CommentThread';
 import { ActivityFeed } from '../activity/ActivityFeed';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/Tabs';
 import { SubtaskList } from './SubtaskList';
+import { TaskAttachments } from './TaskAttachments';
 
 interface TaskDetailDrawerProps {
   taskId: string | null;
@@ -82,6 +83,11 @@ export const TaskDetailDrawer = ({ taskId, onClose }: TaskDetailDrawerProps) => 
 
           {/* Subtasks */}
           <SubtaskList task={task} />
+
+          {/* Attachments */}
+          <div className="pt-6 border-t border-gray-200 dark:border-gray-800">
+            <TaskAttachments task={task} />
+          </div>
 
           {/* Activity / Comments Tabs */}
           <div className="pt-6 border-t border-gray-200 dark:border-gray-800">
