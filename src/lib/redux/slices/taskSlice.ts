@@ -37,6 +37,17 @@ const taskSlice = createSlice({
     addTasks: (state, action: PayloadAction<Task[]>) => {
       tasksAdapter.addMany(state, action.payload);
     },
+    setAllTasks: (state, action: PayloadAction<Task[]>) => {
+      tasksAdapter.setAll(state, action.payload);
+    },
+    restoreTasks: (state, action: PayloadAction<{ toUpsert: Task[]; toRemoveIds?: string[] }>) => {
+      if (action.payload.toUpsert.length > 0) {
+        tasksAdapter.upsertMany(state, action.payload.toUpsert);
+      }
+      if (action.payload.toRemoveIds && action.payload.toRemoveIds.length > 0) {
+        tasksAdapter.removeMany(state, action.payload.toRemoveIds);
+      }
+    },
     updateTask: tasksAdapter.updateOne,
     removeTask: tasksAdapter.removeOne,
     moveTaskStatus: (state, action: PayloadAction<{ id: string; status: TaskStatus }>) => {
@@ -176,7 +187,7 @@ const taskSlice = createSlice({
 });
 
 export const {
-  addTask, addTasks, updateTask, removeTask, moveTaskStatus,
+  addTask, addTasks, setAllTasks, restoreTasks, updateTask, removeTask, moveTaskStatus,
   addSubtask, updateSubtask, removeSubtask, convertSubtaskToTask, convertTaskToSubtask,
   duplicateTask, bulkUpdateTasks, bulkRemoveTasks,
   addAttachment, removeAttachment, addComment, updateComment, removeComment

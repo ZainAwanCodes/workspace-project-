@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
-import { Search, Bell, Menu, User as UserIcon, LogOut, Check, Settings } from 'lucide-react';
+import { 
+  Search, 
+  Bell, 
+  Menu, 
+  User as UserIcon, 
+  LogOut, 
+  Check, 
+  Settings, 
+  RotateCcw, 
+  RotateCw, 
+  Keyboard 
+} from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
-import { setSidebarOpen, setCommandPaletteOpen } from '@/lib/redux/slices/uiSlice';
+import { setSidebarOpen, setCommandPaletteOpen, setShortcutsModalOpen } from '@/lib/redux/slices/uiSlice';
 import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from '../ui/Dropdown';
 import { switchUser } from '@/lib/redux/slices/authSlice';
 import { markAllAsRead } from '@/lib/redux/slices/notificationSlice';
@@ -9,9 +20,12 @@ import { formatDistanceToNow } from 'date-fns';
 import { UserProfileModal } from '../settings/UserProfileModal';
 import { AppSettingsModal } from '../settings/AppSettingsModal';
 import { OfflineIndicator } from './OfflineIndicator';
+import { ActivityTicker } from '../activity/ActivityTicker';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
 
 export const Header = () => {
   const dispatch = useAppDispatch();
+  const { undo, redo, canUndo, canRedo } = useUndoRedo();
   
   // State Selectors
   const currentUser = useAppSelector(state => state.auth.currentUser);
@@ -25,10 +39,10 @@ export const Header = () => {
   const [isAppSettingsOpen, setIsAppSettingsOpen] = useState(false);
 
   return (
-    <header className="h-14 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-between px-4 flex-shrink-0 z-10">
+    <header className="h-14 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-between px-4 flex-shrink-0 z-10 gap-3">
       
       {/* Left side: Hamburger & Search */}
-      <div className="flex items-center flex-1 max-w-2xl">
+      <div className="flex items-center flex-1 max-w-xl">
         {!sidebarOpen && (
           <button 
             onClick={() => dispatch(setSidebarOpen(true))}
@@ -57,9 +71,44 @@ export const Header = () => {
         </div>
       </div>
 
-      {/* Right side: Notifications & Profile */}
-      <div className="flex items-center space-x-4 ml-4">
+      {/* Middle/Center: Live Activity Ticker */}
+      <div className="hidden md:flex items-center">
+        <ActivityTicker />
+      </div>
+
+      {/* Right side: Undo/Redo, Shortcuts, Notifications & Profile */}
+      <div className="flex items-center space-x-2 sm:space-x-3">
         
+        {/* Quick Undo / Redo Buttons */}
+        <div className="hidden lg:flex items-center space-x-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-0.5">
+          <button
+            onClick={undo}
+            disabled={!canUndo}
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed rounded hover:bg-white dark:hover:bg-gray-800 transition-colors"
+            title="Undo (Ctrl+Z)"
+          >
+            <RotateCcw size={14} />
+          </button>
+          <button
+            onClick={redo}
+            disabled={!canRedo}
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed rounded hover:bg-white dark:hover:bg-gray-800 transition-colors"
+            title="Redo (Ctrl+Shift+Z)"
+          >
+            <RotateCw size={14} />
+          </button>
+        </div>
+
+        {/* Keyboard Shortcuts Trigger */}
+        <button
+          onClick={() => dispatch(setShortcutsModalOpen(true))}
+          className="p-2 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 hidden sm:flex"
+          title="Keyboard Shortcuts (?)"
+          aria-label="Keyboard Shortcuts"
+        >
+          <Keyboard size={18} />
+        </button>
+
         <OfflineIndicator />
 
         {/* Notifications */}
@@ -69,7 +118,7 @@ export const Header = () => {
               className="relative p-2 rounded-full text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="Notifications"
             >
-              <Bell size={20} />
+              <Bell size={19} />
               {unreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white dark:border-gray-950"></span>
               )}
@@ -77,7 +126,7 @@ export const Header = () => {
           </DropdownTrigger>
           <DropdownContent align="right" className="w-80">
             <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white text-xs">Notifications</h3>
               {unreadCount > 0 && (
                 <button 
                   onClick={(e) => {
@@ -92,12 +141,12 @@ export const Header = () => {
             </div>
             <div className="max-h-96 overflow-y-auto">
               {notifications.length === 0 ? (
-                <div className="p-4 text-center text-sm text-gray-500">No new notifications</div>
+                <div className="p-4 text-center text-xs text-gray-500">No new notifications</div>
               ) : (
                 notifications.slice(0, 10).map((notif) => (
                   <DropdownItem key={notif!.id} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 p-3">
                     <div className="flex flex-col">
-                      <span className={`text-sm ${notif!.isRead ? 'text-gray-500' : 'text-gray-900 dark:text-gray-100 font-medium'}`}>
+                      <span className={`text-xs ${notif!.isRead ? 'text-gray-500' : 'text-gray-900 dark:text-gray-100 font-medium'}`}>
                         {notif!.message}
                       </span>
                       <span className="text-[10px] text-gray-400 mt-1">

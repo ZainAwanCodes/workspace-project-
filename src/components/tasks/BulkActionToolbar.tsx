@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks';
 import { bulkUpdateTasks, bulkRemoveTasks } from '@/lib/redux/slices/taskSlice';
 import { clearTaskSelection } from '@/lib/redux/slices/uiSlice';
 import { logActivity } from '@/lib/redux/slices/activitySlice';
-import { TaskStatus, TaskPriority } from '@/types/task';
+import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { DEFAULT_KANBAN_COLUMNS, KanbanColumnDef } from '@/types/project';
 import { Avatar } from '@/components/ui/Avatar';
 import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from '@/components/ui/Dropdown';
@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { nanoid } from '@reduxjs/toolkit';
 
+import { useUndoRedo } from '@/hooks/useUndoRedo';
+
 interface BulkActionToolbarProps {
   projectId: string;
 }
@@ -27,8 +29,10 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({ projectId 
   const dispatch = useAppDispatch();
   const selectedTaskIds = useAppSelector(state => state.ui.selectedTaskIds);
   const project = useAppSelector(state => state.projects.entities[projectId]);
+  const tasks = useAppSelector(state => state.tasks.entities);
   const users = useAppSelector(state => state.auth.users);
   const currentUser = useAppSelector(state => state.auth.currentUser);
+  const { trackAction } = useUndoRedo();
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -48,8 +52,22 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({ projectId 
     return null;
   }
 
+  // Get snapshots of selected tasks
+  const getSelectedTaskSnapshots = () => {
+    return selectedTaskIds.map(id => tasks[id]).filter(Boolean) as Task[];
+  };
+
   const handleBulkStatus = (status: TaskStatus, title: string) => {
+    const prevTasks = getSelectedTaskSnapshots();
+    const nextTasks = prevTasks.map(t => ({ ...t, status, updatedAt: new Date().toISOString() }));
+
     dispatch(bulkUpdateTasks({ ids: selectedTaskIds, changes: { status } }));
+    trackAction({
+      description: `Moved ${selectedTaskIds.length} tasks to ${title}`,
+      previousTasks: prevTasks,
+      nextTasks,
+    });
+
     if (currentUser) {
       dispatch(logActivity({
         id: nanoid(),
@@ -64,7 +82,16 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({ projectId 
   };
 
   const handleBulkPriority = (priority: TaskPriority) => {
+    const prevTasks = getSelectedTaskSnapshots();
+    const nextTasks = prevTasks.map(t => ({ ...t, priority, updatedAt: new Date().toISOString() }));
+
     dispatch(bulkUpdateTasks({ ids: selectedTaskIds, changes: { priority } }));
+    trackAction({
+      description: `Set priority of ${selectedTaskIds.length} tasks to ${priority}`,
+      previousTasks: prevTasks,
+      nextTasks,
+    });
+
     if (currentUser) {
       dispatch(logActivity({
         id: nanoid(),
@@ -79,7 +106,18 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({ projectId 
   };
 
   const handleBulkAssignee = (userId?: string, userName?: string) => {
+    const prevTasks = getSelectedTaskSnapshots();
+    const nextTasks = prevTasks.map(t => ({ ...t, assigneeId: userId, updatedAt: new Date().toISOString() }));
+
     dispatch(bulkUpdateTasks({ ids: selectedTaskIds, changes: { assigneeId: userId } }));
+    trackAction({
+      description: userId 
+        ? `Assigned ${selectedTaskIds.length} tasks to ${userName}` 
+        : `Unassigned ${selectedTaskIds.length} tasks`,
+      previousTasks: prevTasks,
+      nextTasks,
+    });
+
     if (currentUser) {
       dispatch(logActivity({
         id: nanoid(),
@@ -97,9 +135,18 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({ projectId 
 
   const handleBulkDelete = () => {
     const count = selectedTaskIds.length;
+    const prevTasks = getSelectedTaskSnapshots();
+
     dispatch(bulkRemoveTasks(selectedTaskIds));
     dispatch(clearTaskSelection());
     setConfirmDelete(false);
+
+    trackAction({
+      description: `Deleted ${count} tasks`,
+      previousTasks: prevTasks,
+      nextTasks: [],
+    });
+
     if (currentUser) {
       dispatch(logActivity({
         id: nanoid(),

@@ -36,6 +36,8 @@ import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { Plus, Check, X } from 'lucide-react';
 import { nanoid } from '@reduxjs/toolkit';
 
+import { useUndoRedo } from '@/hooks/useUndoRedo';
+
 const PRESET_COLORS = [
   { label: 'Slate', value: '#64748b' },
   { label: 'Blue', value: '#3b82f6' },
@@ -50,6 +52,8 @@ export const KanbanBoard = ({ projectId, readOnly = false }: { projectId: string
   const dispatch = useAppDispatch();
   const project = useAppSelector(state => state.projects.entities[projectId]);
   const tasks = useAppSelector(state => selectFilteredTasks(state, projectId));
+  const allTasks = useAppSelector(state => state.tasks.entities);
+  const { trackAction } = useUndoRedo();
 
   // Resolved columns (project custom columns or default columns)
   const columns: KanbanColumnDef[] = useMemo(() => {
@@ -64,6 +68,8 @@ export const KanbanBoard = ({ projectId, readOnly = false }: { projectId: string
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [initialStatus, setInitialStatus] = useState<TaskStatus>('todo');
+
+  const draggedTaskInitialSnapshot = React.useRef<Task | null>(null);
 
   // Add Column Form State
   const [isAddingColumn, setIsAddingColumn] = useState(false);
@@ -92,6 +98,10 @@ export const KanbanBoard = ({ projectId, readOnly = false }: { projectId: string
     if (type === 'Column') {
       setActiveColumnId(event.active.id as string);
     } else {
+      const task = event.active.data.current?.task as Task;
+      if (task) {
+        draggedTaskInitialSnapshot.current = { ...task };
+      }
       setActiveTaskId(event.active.id as string);
     }
   };
@@ -146,6 +156,21 @@ export const KanbanBoard = ({ projectId, readOnly = false }: { projectId: string
       }
     }
 
+    // Check if task status changed during drag
+    if (active.data.current?.type === 'Task' && activeTaskId && draggedTaskInitialSnapshot.current) {
+      const initialTask = draggedTaskInitialSnapshot.current;
+      const currentTask = allTasks[activeTaskId];
+      if (currentTask && currentTask.status !== initialTask.status) {
+        const colTitle = columns.find(c => c.id === currentTask.status)?.title || currentTask.status;
+        trackAction({
+          description: `Moved "${currentTask.title}" to ${colTitle}`,
+          previousTasks: [initialTask],
+          nextTasks: [currentTask],
+        });
+      }
+    }
+
+    draggedTaskInitialSnapshot.current = null;
     setActiveTaskId(null);
     setActiveColumnId(null);
   };

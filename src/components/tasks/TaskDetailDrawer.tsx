@@ -35,6 +35,7 @@ import { SubtaskList } from './SubtaskList';
 import { TaskAttachments } from './TaskAttachments';
 import { DynamicIcon } from '@/utils/iconMap';
 import { nanoid } from '@reduxjs/toolkit';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
 
 interface TaskDetailDrawerProps {
   taskId: string | null;
@@ -51,6 +52,7 @@ export const TaskDetailDrawer = ({ taskId, onClose }: TaskDetailDrawerProps) => 
   
   const users = useAppSelector(state => state.auth.users);
   const currentUser = useAppSelector(state => state.auth.currentUser);
+  const { trackAction } = useUndoRedo();
   
   const project = useAppSelector(state => 
     task ? state.projects.entities[task.projectId] : null
@@ -107,6 +109,11 @@ export const TaskDetailDrawer = ({ taskId, onClose }: TaskDetailDrawerProps) => 
 
   const handleDelete = () => {
     if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
+      trackAction({
+        description: `Deleted task "${task.title}"`,
+        previousTasks: [{ ...task }],
+        nextTasks: [],
+      });
       dispatch(removeTask(task.id));
       onClose();
     }
@@ -136,7 +143,16 @@ export const TaskDetailDrawer = ({ taskId, onClose }: TaskDetailDrawerProps) => 
   };
 
   const handleStatusChange = (newStatus: TaskStatus) => {
+    const previousTask = { ...task };
+    const updatedTask = { ...task, status: newStatus, updatedAt: new Date().toISOString() };
+    
     dispatch(moveTaskStatus({ id: task.id, status: newStatus }));
+    trackAction({
+      description: `Moved "${task.title}" to ${newStatus.replace('-', ' ')}`,
+      previousTasks: [previousTask],
+      nextTasks: [updatedTask],
+    });
+
     if (currentUser) {
       dispatch(logActivity({
         id: nanoid(),
@@ -151,7 +167,16 @@ export const TaskDetailDrawer = ({ taskId, onClose }: TaskDetailDrawerProps) => 
   };
 
   const handlePriorityChange = (newPriority: TaskPriority) => {
+    const previousTask = { ...task };
+    const updatedTask = { ...task, priority: newPriority, updatedAt: new Date().toISOString() };
+
     dispatch(updateTask({ id: task.id, changes: { priority: newPriority } }));
+    trackAction({
+      description: `Changed priority of "${task.title}" to ${newPriority.toUpperCase()}`,
+      previousTasks: [previousTask],
+      nextTasks: [updatedTask],
+    });
+
     if (currentUser) {
       dispatch(logActivity({
         id: nanoid(),

@@ -6,6 +6,7 @@ import taskReducer from './slices/taskSlice';
 import uiReducer from './slices/uiSlice';
 import notificationReducer from './slices/notificationSlice';
 import activityReducer from './slices/activitySlice';
+import historyReducer from './slices/historySlice';
 import { loadState, persistenceMiddleware } from './middleware/persistenceMiddleware';
 
 const rootReducer = combineReducers({
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
   ui: uiReducer,
   notifications: notificationReducer,
   activities: activityReducer,
+  history: historyReducer,
 });
 
 export const store = configureStore({

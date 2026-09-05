@@ -1,18 +1,82 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, nanoid } from '@reduxjs/toolkit';
+
+export interface FilterState {
+  assigneeIds: string[];
+  labels: string[];
+  priorities: string[];
+  statuses: string[];
+}
+
+export interface FilterPreset {
+  id: string;
+  name: string;
+  icon?: string;
+  isSystem?: boolean;
+  filters: FilterState;
+}
+
+export const DEFAULT_FILTER_PRESETS: FilterPreset[] = [
+  {
+    id: 'preset-high-urgent',
+    name: 'High & Urgent',
+    icon: 'Flame',
+    isSystem: true,
+    filters: {
+      assigneeIds: [],
+      labels: [],
+      priorities: ['high', 'urgent'],
+      statuses: [],
+    },
+  },
+  {
+    id: 'preset-active',
+    name: 'Active (In Progress & Review)',
+    icon: 'Clock',
+    isSystem: true,
+    filters: {
+      assigneeIds: [],
+      labels: [],
+      priorities: [],
+      statuses: ['in-progress', 'review'],
+    },
+  },
+  {
+    id: 'preset-backlog',
+    name: 'To Do / Backlog',
+    icon: 'ListTodo',
+    isSystem: true,
+    filters: {
+      assigneeIds: [],
+      labels: [],
+      priorities: [],
+      statuses: ['todo'],
+    },
+  },
+  {
+    id: 'preset-done',
+    name: 'Completed Tasks',
+    icon: 'CheckCircle2',
+    isSystem: true,
+    filters: {
+      assigneeIds: [],
+      labels: [],
+      priorities: [],
+      statuses: ['done'],
+    },
+  },
+];
 
 interface UIState {
   globalSearchQuery: string;
   activeViewMode: 'kanban' | 'list' | 'calendar';
   groupBy: 'assignee' | 'status' | 'priority' | 'label' | 'none';
-  activeFilters: {
-    assigneeIds: string[];
-    labels: string[];
-    priorities: string[];
-    statuses: string[];
-  };
+  activeFilters: FilterState;
+  filterPresets: FilterPreset[];
+  activePresetId: string | null;
   theme: 'light' | 'dark';
   sidebarOpen: boolean;
   commandPaletteOpen: boolean;
+  shortcutsModalOpen: boolean;
   selectedTaskIds: string[];
 }
 
@@ -26,9 +90,12 @@ const initialState: UIState = {
     priorities: [],
     statuses: [],
   },
+  filterPresets: DEFAULT_FILTER_PRESETS,
+  activePresetId: null,
   theme: 'light',
   sidebarOpen: true,
   commandPaletteOpen: false,
+  shortcutsModalOpen: false,
   selectedTaskIds: [],
 };
 
@@ -45,11 +112,38 @@ const uiSlice = createSlice({
     setGroupBy: (state, action: PayloadAction<UIState['groupBy']>) => {
       state.groupBy = action.payload;
     },
-    setFilters: (state, action: PayloadAction<Partial<UIState['activeFilters']>>) => {
+    setFilters: (state, action: PayloadAction<Partial<FilterState>>) => {
       state.activeFilters = { ...state.activeFilters, ...action.payload };
+      state.activePresetId = null; // custom filter applied
     },
     clearFilters: (state) => {
-      state.activeFilters = initialState.activeFilters;
+      state.activeFilters = {
+        assigneeIds: [],
+        labels: [],
+        priorities: [],
+        statuses: [],
+      };
+      state.activePresetId = null;
+    },
+    applyFilterPreset: (state, action: PayloadAction<{ presetId: string; filters: FilterState }>) => {
+      state.activeFilters = action.payload.filters;
+      state.activePresetId = action.payload.presetId;
+    },
+    saveFilterPreset: (state, action: PayloadAction<{ name: string; filters: FilterState }>) => {
+      const newPreset: FilterPreset = {
+        id: `custom-${nanoid(6)}`,
+        name: action.payload.name,
+        isSystem: false,
+        filters: action.payload.filters,
+      };
+      state.filterPresets.push(newPreset);
+      state.activePresetId = newPreset.id;
+    },
+    deleteFilterPreset: (state, action: PayloadAction<string>) => {
+      state.filterPresets = state.filterPresets.filter(p => p.id !== action.payload || p.isSystem);
+      if (state.activePresetId === action.payload) {
+        state.activePresetId = null;
+      }
     },
     toggleTheme: (state) => {
       state.theme = state.theme === 'light' ? 'dark' : 'light';
@@ -59,6 +153,9 @@ const uiSlice = createSlice({
     },
     setCommandPaletteOpen: (state, action: PayloadAction<boolean>) => {
       state.commandPaletteOpen = action.payload;
+    },
+    setShortcutsModalOpen: (state, action: PayloadAction<boolean>) => {
+      state.shortcutsModalOpen = action.payload;
     },
     toggleTaskSelection: (state, action: PayloadAction<string>) => {
       const index = state.selectedTaskIds.indexOf(action.payload);
@@ -82,9 +179,10 @@ const uiSlice = createSlice({
 
 export const {
   setGlobalSearchQuery, setActiveViewMode, setGroupBy,
-  setFilters, clearFilters, toggleTheme,
-  setSidebarOpen, setCommandPaletteOpen,
+  setFilters, clearFilters, applyFilterPreset, saveFilterPreset, deleteFilterPreset,
+  toggleTheme, setSidebarOpen, setCommandPaletteOpen, setShortcutsModalOpen,
   toggleTaskSelection, selectAllTasks, deselectTasks, clearTaskSelection
 } = uiSlice.actions;
 
 export default uiSlice.reducer;
+

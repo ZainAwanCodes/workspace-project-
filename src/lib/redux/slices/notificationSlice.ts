@@ -19,7 +19,10 @@ const initialState = notificationsAdapter.getInitialState({
   preferences: {
     assigned: true,
     mentioned: true,
-    due_soon: true
+    due_soon: true,
+    activity_ticker_alerts: true,
+    email_digest: false,
+    sound_enabled: true,
   } as NotificationPreferences
 });
 
@@ -35,9 +38,10 @@ const notificationSlice = createSlice({
       }
     },
     markAllAsRead: (state) => {
-      Object.values(state.entities).forEach(notification => {
-        if (notification) {
-          notification.isRead = true;
+      state.ids.forEach(id => {
+        const notif = state.entities[id];
+        if (notif) {
+          notif.isRead = true;
         }
       });
     },

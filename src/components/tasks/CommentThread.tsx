@@ -11,6 +11,7 @@ import { nanoid } from '@reduxjs/toolkit';
 import { Trash2, Edit2, Check, X, AtSign } from 'lucide-react';
 import { useHasPermission } from '@/lib/redux/usePermissions';
 import { MentionInput } from './MentionInput';
+import { useToast } from '@/providers/ToastProvider';
 
 interface CommentThreadProps {
   taskId: string;
@@ -116,9 +117,27 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
     setEditingContent('');
   };
 
+  const { addToast } = useToast();
+
   const handleDeleteComment = (commentId: string) => {
+    const deletedComment = comments.find(c => c.id === commentId);
     dispatch(removeComment({ taskId, commentId }));
     setConfirmDeleteId(null);
+
+    if (deletedComment) {
+      addToast({
+        type: 'info',
+        title: 'Comment deleted',
+        description: 'Comment was removed from the task thread',
+        duration: 4000,
+        action: {
+          label: 'Undo',
+          onClick: () => {
+            dispatch(addComment({ taskId, comment: deletedComment }));
+          }
+        }
+      });
+    }
 
     if (projectId && currentUser) {
       dispatch(logActivity({

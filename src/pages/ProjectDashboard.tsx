@@ -20,6 +20,7 @@ import { BulkActionToolbar } from '@/components/tasks/BulkActionToolbar';
 import { Settings } from 'lucide-react';
 import { useCurrentRole, useHasPermission } from '@/lib/redux/usePermissions';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 export default function ProjectDashboard() {
   const { projectId } = useParams();
@@ -42,6 +43,18 @@ export default function ProjectDashboard() {
   // New Task State
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  // Shortcut: C to open Create Task Modal
+  useKeyboardShortcuts([
+    {
+      combo: { key: 'c' },
+      callback: () => {
+        if (canCreateTask && !project?.isArchived) {
+          setIsNewTaskModalOpen(true);
+        }
+      }
+    }
+  ]);
 
   const handleUnarchive = () => {
     if (!project) return;
@@ -146,18 +159,22 @@ export default function ProjectDashboard() {
         <div className="flex items-center justify-between">
           <Tabs 
             defaultValue={activeViewMode} 
+            value={activeViewMode}
             onValueChange={(val) => dispatch(setActiveViewMode(val as 'kanban' | 'list' | 'calendar'))}
             className="w-auto"
           >
-            <TabsList className="mb-0 border-none space-x-2">
-              <TabsTrigger value="kanban">
-                Board
+            <TabsList className="mb-0 border-none space-x-1.5">
+              <TabsTrigger value="kanban" className="flex items-center space-x-1.5">
+                <span>Board</span>
+                <kbd className="hidden md:inline-block px-1 py-0.2 text-[9px] font-sans font-semibold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">1</kbd>
               </TabsTrigger>
-              <TabsTrigger value="list">
-                List
+              <TabsTrigger value="list" className="flex items-center space-x-1.5">
+                <span>List</span>
+                <kbd className="hidden md:inline-block px-1 py-0.2 text-[9px] font-sans font-semibold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">2</kbd>
               </TabsTrigger>
-              <TabsTrigger value="calendar">
-                Calendar
+              <TabsTrigger value="calendar" className="flex items-center space-x-1.5">
+                <span>Calendar</span>
+                <kbd className="hidden md:inline-block px-1 py-0.2 text-[9px] font-sans font-semibold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">3</kbd>
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -165,8 +182,9 @@ export default function ProjectDashboard() {
           <div className="flex items-center space-x-2">
             <FilterBar />
             {canCreateTask ? (
-              <Button size="sm" onClick={() => setIsNewTaskModalOpen(true)}>
-                New Task
+              <Button size="sm" onClick={() => setIsNewTaskModalOpen(true)} className="flex items-center space-x-1.5 shadow-xs">
+                <span>New Task</span>
+                <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[10px] font-sans font-semibold bg-blue-700/60 text-blue-100 rounded">C</kbd>
               </Button>
             ) : (
               <Tooltip side="bottom" content="You do not have permission to create tasks.">

@@ -14,4 +14,7 @@ export interface NotificationPreferences {
   assigned: boolean;
   mentioned: boolean;
   due_soon: boolean;
+  activity_ticker_alerts: boolean;
+  email_digest: boolean;
+  sound_enabled: boolean;
 }

@@ -11,20 +11,23 @@ const TabsContext = createContext<TabsContextType | undefined>(undefined);
 
 export const Tabs = ({
   defaultValue,
+  value,
   onValueChange,
   children,
   className,
 }: {
   defaultValue: string;
+  value?: string;
   onValueChange?: (value: string) => void;
   children: React.ReactNode;
   className?: string;
 }) => {
-  const [activeTab, setActiveTab] = useState(defaultValue);
+  const [internalTab, setInternalTab] = useState(defaultValue);
+  const activeTab = value !== undefined ? value : internalTab;
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    onValueChange?.(value);
+  const handleTabChange = (val: string) => {
+    setInternalTab(val);
+    onValueChange?.(val);
   };
 
   return (
