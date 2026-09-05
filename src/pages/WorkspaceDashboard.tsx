@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { addProject } from '@/lib/redux/slices/projectSlice';
+import { useCurrentRole, useHasPermission } from '@/lib/redux/usePermissions';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Avatar } from '@/components/ui/Avatar';
-import { Plus, Briefcase, Layout, Users, Settings } from 'lucide-react';
+import { Plus, Briefcase, Layout, Users, Settings, ShieldAlert } from 'lucide-react';
 import { nanoid } from '@reduxjs/toolkit';
 import { WorkspaceSettingsModal } from '@/components/settings/WorkspaceSettingsModal';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 export default function WorkspaceDashboard() {
   const { workspaceId } = useParams();
@@ -26,6 +28,10 @@ export default function WorkspaceDashboard() {
   );
   
   const users = useAppSelector(state => state.auth.users);
+  
+  const role = useCurrentRole();
+  const canManageWorkspace = useHasPermission(['owner', 'admin']);
+  const canCreateProject = useHasPermission(['owner', 'admin', 'member']);
 
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
@@ -72,7 +78,14 @@ export default function WorkspaceDashboard() {
               <Briefcase size={32} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{workspace.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center">
+                {workspace.name}
+                {role && (
+                  <span className="ml-3 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 border border-blue-200 dark:border-blue-800 uppercase tracking-wider">
+                    {role}
+                  </span>
+                )}
+              </h1>
               <p className="text-gray-500 dark:text-gray-400 mt-1 flex items-center space-x-4">
                 <span className="flex items-center"><Layout size={14} className="mr-1.5" /> {projects.length} Active Projects</span>
                 <span className="flex items-center"><Users size={14} className="mr-1.5" /> {workspace.members.length} Members</span>
@@ -80,12 +93,25 @@ export default function WorkspaceDashboard() {
             </div>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline" onClick={() => setIsSettingsModalOpen(true)}>
-              <Settings size={16} className="mr-2" />Settings
-            </Button>
-            <Button onClick={() => setIsNewProjectModalOpen(true)}>
-              <Plus size={16} className="mr-2" /> New Project
-            </Button>
+            {canManageWorkspace && (
+              <Button variant="outline" onClick={() => setIsSettingsModalOpen(true)}>
+                <Settings size={16} className="mr-2" />Settings
+              </Button>
+            )}
+            
+            {canCreateProject ? (
+              <Button onClick={() => setIsNewProjectModalOpen(true)}>
+                <Plus size={16} className="mr-2" /> New Project
+              </Button>
+            ) : (
+              <Tooltip side="bottom" content="You do not have permission to create projects.">
+                <div>
+                  <Button disabled variant="outline" className="opacity-60 cursor-not-allowed">
+                    <ShieldAlert size={16} className="mr-2 text-gray-400" /> New Project
+                  </Button>
+                </div>
+              </Tooltip>
+            )}
           </div>
         </div>
       </div>

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { setActiveViewMode } from '@/lib/redux/slices/uiSlice';
 import { addTask } from '@/lib/redux/slices/taskSlice';
-import { UserPlus, MoreHorizontal, Layout } from 'lucide-react';
+import { UserPlus, MoreHorizontal, Layout, ShieldAlert } from 'lucide-react';
 import { KanbanBoard } from '@/components/views/Kanban/KanbanBoard';
 import { ListView } from '@/components/views/List/ListView';
 import { CalendarView } from '@/components/views/Calendar/CalendarView';
@@ -18,6 +18,8 @@ import { nanoid } from '@reduxjs/toolkit';
 
 import { ProjectSettingsModal } from '@/components/settings/ProjectSettingsModal';
 import { Settings } from 'lucide-react';
+import { useCurrentRole, useHasPermission } from '@/lib/redux/usePermissions';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 export default function ProjectDashboard() {
   const { projectId } = useParams();
@@ -30,6 +32,10 @@ export default function ProjectDashboard() {
   const activeViewMode = useAppSelector(state => state.ui.activeViewMode);
   const users = useAppSelector(state => state.auth.users);
   const currentUser = useAppSelector(state => state.auth.currentUser);
+
+  const role = useCurrentRole();
+  const canManageProject = useHasPermission(['owner', 'admin']);
+  const canCreateTask = useHasPermission(['owner', 'admin', 'member']);
 
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   
@@ -103,9 +109,11 @@ export default function ProjectDashboard() {
             
             <div className="w-px h-6 bg-gray-200 dark:bg-gray-800" />
             
-            <Button variant="ghost" size="icon" onClick={() => setIsSettingsModalOpen(true)}>
-              <Settings size={18} />
-            </Button>
+            {canManageProject && (
+              <Button variant="ghost" size="icon" onClick={() => setIsSettingsModalOpen(true)}>
+                <Settings size={18} />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -131,9 +139,19 @@ export default function ProjectDashboard() {
           
           <div className="flex items-center space-x-2">
             <FilterBar />
-            <Button size="sm" onClick={() => setIsNewTaskModalOpen(true)}>
-              New Task
-            </Button>
+            {canCreateTask ? (
+              <Button size="sm" onClick={() => setIsNewTaskModalOpen(true)}>
+                New Task
+              </Button>
+            ) : (
+              <Tooltip side="bottom" content="You do not have permission to create tasks.">
+                <div>
+                  <Button disabled size="sm" className="opacity-60 cursor-not-allowed">
+                    <ShieldAlert size={14} className="mr-1.5 text-white/70" /> New Task
+                  </Button>
+                </div>
+              </Tooltip>
+            )}
           </div>
         </div>
       </div>

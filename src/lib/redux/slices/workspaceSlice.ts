@@ -14,6 +14,7 @@ const initialWorkspaces: Workspace[] = [
       { userId: 'u1', role: 'owner' },
       { userId: 'u2', role: 'admin' },
       { userId: 'u3', role: 'member' },
+      { userId: 'u4', role: 'viewer' },
     ]
   }
 ];

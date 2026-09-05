@@ -28,7 +28,7 @@ const COLUMNS: { id: TaskStatus; title: string }[] = [
   { id: 'done', title: 'Done' }
 ];
 
-export const KanbanBoard = ({ projectId }: { projectId: string }) => {
+export const KanbanBoard = ({ projectId, readOnly = false }: { projectId: string; readOnly?: boolean }) => {
   const dispatch = useAppDispatch();
   const tasks = useAppSelector(state => selectFilteredTasks(state, projectId));
 
@@ -40,7 +40,7 @@ export const KanbanBoard = ({ projectId }: { projectId: string }) => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5, // 5px movement required before drag starts to allow for clicks
+        distance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -48,11 +48,15 @@ export const KanbanBoard = ({ projectId }: { projectId: string }) => {
     })
   );
 
+  const activeSensors = readOnly ? [] : sensors;
+
   const onDragStart = (event: DragStartEvent) => {
+    if (readOnly) return;
     setActiveId(event.active.id as string);
   };
 
   const onDragOver = (event: DragOverEvent) => {
+    if (readOnly) return;
     const { active, over } = event;
     if (!over) return;
 

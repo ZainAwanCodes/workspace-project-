@@ -11,6 +11,7 @@ const mockUsers: User[] = [
   { id: 'u1', name: 'Alice Admin', email: 'alice@example.com', avatar: 'https://i.pravatar.cc/150?u=u1' },
   { id: 'u2', name: 'Bob Builder', email: 'bob@example.com', avatar: 'https://i.pravatar.cc/150?u=u2' },
   { id: 'u3', name: 'Charlie Checker', email: 'charlie@example.com', avatar: 'https://i.pravatar.cc/150?u=u3' },
+  { id: 'u4', name: 'Diana Viewer', email: 'diana@example.com', avatar: 'https://i.pravatar.cc/150?u=u4' },
 ];
 
 const initialState: AuthState = {
