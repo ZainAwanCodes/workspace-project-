@@ -16,6 +16,17 @@ const initialWorkspaces: Workspace[] = [
       { userId: 'u3', role: 'member' },
       { userId: 'u4', role: 'viewer' },
     ]
+  },
+  {
+    id: 'w2',
+    name: 'Starlight Studio',
+    icon: 'sparkles',
+    color: '#8b5cf6',
+    defaultView: 'kanban',
+    members: [
+      { userId: 'u1', role: 'owner' },
+      { userId: 'u2', role: 'member' },
+    ]
   }
 ];
 
@@ -36,7 +47,9 @@ const workspaceSlice = createSlice({
     addMember: (state, action: PayloadAction<{ workspaceId: string; member: WorkspaceMember }>) => {
       const workspace = state.entities[action.payload.workspaceId];
       if (workspace) {
-        workspace.members.push(action.payload.member);
+        if (!workspace.members.some(m => m.userId === action.payload.member.userId)) {
+          workspace.members.push(action.payload.member);
+        }
       }
     },
     updateMemberRole: (state, action: PayloadAction<{ workspaceId: string; userId: string; role: WorkspaceMember['role'] }>) => {

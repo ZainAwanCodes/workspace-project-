@@ -34,6 +34,9 @@ const taskSlice = createSlice({
     addTask: (state, action: PayloadAction<Task>) => {
       tasksAdapter.addOne(state, action.payload);
     },
+    addTasks: (state, action: PayloadAction<Task[]>) => {
+      tasksAdapter.addMany(state, action.payload);
+    },
     updateTask: tasksAdapter.updateOne,
     removeTask: tasksAdapter.removeOne,
     moveTaskStatus: (state, action: PayloadAction<{ id: string; status: TaskStatus }>) => {
@@ -130,7 +133,7 @@ const taskSlice = createSlice({
 });
 
 export const {
-  addTask, updateTask, removeTask, moveTaskStatus,
+  addTask, addTasks, updateTask, removeTask, moveTaskStatus,
   addSubtask, updateSubtask, removeSubtask, convertSubtaskToTask,
   duplicateTask, bulkUpdateTasks, bulkRemoveTasks,
   addAttachment, removeAttachment, addComment

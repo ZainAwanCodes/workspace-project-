@@ -1,3 +1,5 @@
+import { TaskStatus, TaskPriority } from './task';
+
 export interface Project {
   id: string;
   workspaceId: string;
@@ -9,8 +11,20 @@ export interface Project {
   isArchived: boolean;
 }
 
+export interface TemplateTask {
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  labels: string[];
+  subtasks?: string[];
+}
+
 export interface ProjectTemplate {
   id: string;
   name: string;
-  tasks: unknown[]; // Placeholder for template tasks structure
+  description: string;
+  icon: string;
+  color: string;
+  tasks: TemplateTask[];
 }

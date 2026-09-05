@@ -8,13 +8,15 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { setActiveViewMode } from '@/lib/redux/slices/uiSlice';
 import { addTask } from '@/lib/redux/slices/taskSlice';
-import { UserPlus, MoreHorizontal, Layout, ShieldAlert } from 'lucide-react';
+import { updateProject } from '@/lib/redux/slices/projectSlice';
+import { UserPlus, Layout, ShieldAlert, Archive, RotateCcw } from 'lucide-react';
 import { KanbanBoard } from '@/components/views/Kanban/KanbanBoard';
 import { ListView } from '@/components/views/List/ListView';
 import { CalendarView } from '@/components/views/Calendar/CalendarView';
 import { TaskDetailDrawer } from '@/components/tasks/TaskDetailDrawer';
 import { FilterBar } from '@/components/filtering/FilterBar';
 import { nanoid } from '@reduxjs/toolkit';
+import { DynamicIcon } from '@/utils/iconMap';
 
 import { ProjectSettingsModal } from '@/components/settings/ProjectSettingsModal';
 import { Settings } from 'lucide-react';
@@ -68,6 +70,14 @@ export default function ProjectDashboard() {
     setIsNewTaskModalOpen(false);
   };
 
+  const handleUnarchive = () => {
+    if (!project) return;
+    dispatch(updateProject({
+      id: project.id,
+      changes: { isArchived: false }
+    }));
+  };
+
   if (!project) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center h-full">
@@ -80,21 +90,58 @@ export default function ProjectDashboard() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-gray-950">
+      {/* Archived Notice Banner */}
+      {project.isArchived && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 py-2 flex items-center justify-between text-xs text-amber-800 dark:text-amber-300">
+          <div className="flex items-center space-x-2">
+            <Archive size={14} />
+            <span>This project is currently archived. It is hidden from standard navigation.</span>
+          </div>
+          <button
+            onClick={handleUnarchive}
+            className="font-medium underline hover:text-amber-950 dark:hover:text-amber-200 flex items-center space-x-1"
+          >
+            <RotateCcw size={12} className="mr-1" />
+            Unarchive Project
+          </button>
+        </div>
+      )}
+
       {/* Project Header */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div 
-              className="w-4 h-4 rounded-sm flex-shrink-0" 
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm shadow-xs flex-shrink-0" 
               style={{ backgroundColor: project.color || '#3b82f6' }} 
-            />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{project.name}</h1>
+            >
+              <DynamicIcon name={project.icon || 'layout'} size={18} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center">
+                {project.name}
+                {project.isArchived && (
+                  <span className="ml-2.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                    Archived
+                  </span>
+                )}
+              </h1>
+              {project.description && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-xl truncate">
+                  {project.description}
+                </p>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center space-x-4">
             {/* Project Members */}
             <div className="flex items-center">
-              <div className="flex -space-x-2 mr-3">
+              <div 
+                className="flex -space-x-2 mr-3 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setIsSettingsModalOpen(true)}
+                title="Manage Project Members"
+              >
                 {project.memberIds.map(id => {
                   const user = users.find(u => u.id === id);
                   return user ? (
@@ -102,15 +149,20 @@ export default function ProjectDashboard() {
                   ) : null;
                 })}
               </div>
-              <Button variant="outline" size="sm" className="rounded-full h-8 px-3 text-xs">
-                <UserPlus size={14} className="mr-1.5" /> Share
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="rounded-full h-8 px-3 text-xs"
+                onClick={() => setIsSettingsModalOpen(true)}
+              >
+                <UserPlus size={14} className="mr-1.5" /> Members ({project.memberIds.length})
               </Button>
             </div>
             
             <div className="w-px h-6 bg-gray-200 dark:bg-gray-800" />
             
             {canManageProject && (
-              <Button variant="ghost" size="icon" onClick={() => setIsSettingsModalOpen(true)}>
+              <Button variant="ghost" size="icon" onClick={() => setIsSettingsModalOpen(true)} title="Project Settings">
                 <Settings size={18} />
               </Button>
             )}
