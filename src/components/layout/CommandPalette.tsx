@@ -88,18 +88,25 @@ export const CommandPalette = () => {
               {filteredTasks.length > 0 && (
                 <div>
                   <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Tasks</div>
-                  {filteredTasks.map(t => t && (
-                    <button 
-                      key={t.id}
-                      onClick={() => {
-                        navigateToProject(t.projectId, t.projectId); // Needs exact project routing in a real app
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      <CheckSquare size={16} className="text-gray-400" />
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{t.title}</span>
-                    </button>
-                  ))}
+                  {filteredTasks.map(t => {
+                    if (!t) return null;
+                    const project = projects.find(p => p?.id === t.projectId);
+                    
+                    return (
+                      <button 
+                        key={t.id}
+                        onClick={() => {
+                          if (project) {
+                            navigateToProject(project.workspaceId, project.id);
+                          }
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <CheckSquare size={16} className="text-gray-400" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{t.title}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 

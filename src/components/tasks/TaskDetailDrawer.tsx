@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { CommentThread } from './CommentThread';
 import { ActivityFeed } from '../activity/ActivityFeed';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/Tabs';
+import { SubtaskList } from './SubtaskList';
 
 interface TaskDetailDrawerProps {
   taskId: string | null;
@@ -79,15 +80,8 @@ export const TaskDetailDrawer = ({ taskId, onClose }: TaskDetailDrawerProps) => 
             />
           </div>
 
-          {/* Subtasks Placeholder */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
-              <CheckSquare size={16} className="mr-2" /> Subtasks
-            </h3>
-            <div className="border border-gray-200 dark:border-gray-800 rounded-md p-4 bg-gray-50 dark:bg-gray-900 text-center">
-              <p className="text-sm text-gray-500">Subtask implementation (Phase 4.2)</p>
-            </div>
-          </div>
+          {/* Subtasks */}
+          <SubtaskList task={task} />
 
           {/* Activity / Comments Tabs */}
           <div className="pt-6 border-t border-gray-200 dark:border-gray-800">

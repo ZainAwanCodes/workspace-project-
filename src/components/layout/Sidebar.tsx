@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { setActiveProject } from '@/lib/redux/slices/projectSlice';
+import { setActiveWorkspace } from '@/lib/redux/slices/workspaceSlice';
 import { setActiveViewMode, toggleTheme, setSidebarOpen } from '@/lib/redux/slices/uiSlice';
 import { 
   Briefcase, Kanban, List as ListIcon, Calendar, 
-  Moon, Sun, ChevronDown, ChevronRight, X 
+  Moon, Sun, ChevronDown, ChevronRight, X, Check 
 } from 'lucide-react';
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from '../ui/Dropdown';
+import { useNavigate } from 'react-router-dom';
 
 export const Sidebar = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   
   // UI State
   const { sidebarOpen, activeViewMode, theme } = useAppSelector(state => state.ui);
@@ -25,20 +29,51 @@ export const Sidebar = () => {
   // Local Component State
   const [projectsExpanded, setProjectsExpanded] = useState(true);
 
+  const handleWorkspaceSwitch = (workspaceId: string) => {
+    dispatch(setActiveWorkspace(workspaceId));
+    navigate(`/w/${workspaceId}`);
+  };
+
+  const handleProjectSwitch = (projectId: string) => {
+    dispatch(setActiveProject(projectId));
+    navigate(`/w/${activeWorkspaceId}/p/${projectId}`);
+  };
+
   if (!sidebarOpen) return null;
 
   return (
     <aside className="w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-col h-full transition-all duration-300">
       {/* Workspace Header Component */}
-      <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-        <div className="flex items-center space-x-3 text-gray-900 dark:text-white font-semibold overflow-hidden">
-          <div className="w-8 h-8 rounded-md bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
-            <Briefcase size={16} />
-          </div>
-          <span className="truncate">{activeWorkspace?.name || 'Select Workspace'}</span>
-        </div>
+      <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 transition-colors">
+        <Dropdown className="flex-1 w-full truncate">
+          <DropdownTrigger className="w-full flex items-center space-x-3 text-gray-900 dark:text-white font-semibold overflow-hidden hover:bg-gray-200 dark:hover:bg-gray-800 px-2 py-1.5 rounded-md transition-colors">
+            <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
+              <Briefcase size={14} />
+            </div>
+            <span className="truncate text-sm flex-1 text-left">{activeWorkspace?.name || 'Select Workspace'}</span>
+            <ChevronDown size={14} className="text-gray-500" />
+          </DropdownTrigger>
+          <DropdownContent align="left" className="w-56 mt-1 ml-1">
+            <div className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Workspaces</div>
+            {workspaces.map(w => (
+              <DropdownItem 
+                key={w.id} 
+                onClick={() => handleWorkspaceSwitch(w.id)}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center space-x-2 truncate">
+                  <div className="w-5 h-5 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 text-xs flex-shrink-0">
+                    <Briefcase size={10} />
+                  </div>
+                  <span className="truncate">{w.name}</span>
+                </div>
+                {activeWorkspaceId === w.id && <Check size={14} className="text-blue-500 flex-shrink-0 ml-2" />}
+              </DropdownItem>
+            ))}
+          </DropdownContent>
+        </Dropdown>
         <button 
-          className="md:hidden text-gray-500 hover:text-gray-900 dark:hover:text-white" 
+          className="md:hidden text-gray-500 hover:text-gray-900 dark:hover:text-white ml-2" 
           onClick={(e) => {
             e.stopPropagation();
             dispatch(setSidebarOpen(false));
@@ -93,7 +128,7 @@ export const Sidebar = () => {
                 .map(project => (
                   <button
                     key={project.id}
-                    onClick={() => dispatch(setActiveProject(project.id))}
+                    onClick={() => handleProjectSwitch(project.id)}
                     className={`w-full flex items-center space-x-3 px-2 py-1.5 rounded-md text-sm transition-colors ${
                       activeProjectId === project.id 
                         ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 font-medium' 
