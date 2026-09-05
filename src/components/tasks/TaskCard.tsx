@@ -1,5 +1,6 @@
 import React from 'react';
-import { useAppSelector } from '@/lib/redux/hooks';
+import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
+import { toggleTaskSelection } from '@/lib/redux/slices/uiSlice';
 import { Task } from '@/types/task';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
@@ -14,8 +15,13 @@ interface TaskCardProps {
 }
 
 export const TaskCard = ({ task, onClick, isDragging }: TaskCardProps) => {
+  const dispatch = useAppDispatch();
   const users = useAppSelector(state => state.auth.users);
+  const selectedTaskIds = useAppSelector(state => state.ui.selectedTaskIds);
   const assignee = users.find(u => u.id === task.assigneeId);
+
+  const isSelected = selectedTaskIds.includes(task.id);
+  const hasAnySelection = selectedTaskIds.length > 0;
 
   // Priority Colors
   const priorityColors = {
@@ -51,10 +57,38 @@ export const TaskCard = ({ task, onClick, isDragging }: TaskCardProps) => {
       onClick={onClick}
       className={cn(
         "bg-white dark:bg-gray-900 border rounded-lg p-3 cursor-grab active:cursor-grabbing hover:border-blue-400 dark:hover:border-blue-500 transition-all shadow-sm group relative",
-        isDragging ? "opacity-50 border-blue-500 shadow-md ring-2 ring-blue-500 ring-opacity-20" : "border-gray-200 dark:border-gray-800",
+        isSelected 
+          ? "ring-2 ring-blue-500 border-blue-500 bg-blue-50/30 dark:bg-blue-950/30 shadow-md"
+          : isDragging 
+            ? "opacity-50 border-blue-500 shadow-md ring-2 ring-blue-500 ring-opacity-20" 
+            : "border-gray-200 dark:border-gray-800",
       )}
     >
-      <div className="flex justify-between items-start mb-2 gap-2">
+      {/* Selection Checkbox */}
+      <div 
+        onClick={(e) => {
+          e.stopPropagation();
+          dispatch(toggleTaskSelection(task.id));
+        }}
+        className={cn(
+          "absolute top-2.5 right-2.5 z-10 p-0.5 rounded transition-opacity cursor-pointer",
+          isSelected 
+            ? "opacity-100" 
+            : hasAnySelection 
+              ? "opacity-70 hover:opacity-100" 
+              : "opacity-0 group-hover:opacity-100"
+        )}
+        title={isSelected ? "Deselect task" : "Select task"}
+      >
+        <input 
+          type="checkbox" 
+          checked={isSelected}
+          onChange={() => {}} // handled by click container
+          className="w-4 h-4 rounded border-gray-300 dark:border-gray-700 text-blue-600 focus:ring-blue-500 cursor-pointer pointer-events-none"
+        />
+      </div>
+
+      <div className="flex justify-between items-start mb-2 gap-2 pr-6">
         <div className="flex flex-wrap gap-1">
           {task.labels.map(label => (
             <Badge key={label} variant="outline" size="sm" className="text-[10px] py-0">

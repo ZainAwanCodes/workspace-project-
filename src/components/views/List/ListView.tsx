@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { updateTask } from '@/lib/redux/slices/taskSlice';
 import { logActivity } from '@/lib/redux/slices/activitySlice';
-import { setGroupBy } from '@/lib/redux/slices/uiSlice';
+import { setGroupBy, toggleTaskSelection, selectAllTasks, deselectTasks } from '@/lib/redux/slices/uiSlice';
 import { selectFilteredTasks } from '@/lib/redux/selectors/taskSelectors';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { DEFAULT_KANBAN_COLUMNS, KanbanColumnDef } from '@/types/project';
@@ -65,6 +65,24 @@ export const ListView = ({ projectId, onTaskClick }: { projectId: string; onTask
   // Create Task Modal from Group
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [initialGroupStatus, setInitialGroupStatus] = useState<TaskStatus>('todo');
+
+  // Multi-select state
+  const selectedTaskIds = useAppSelector(state => state.ui.selectedTaskIds);
+  const visibleTaskIds = useMemo(() => tasks.map(t => t.id), [tasks]);
+  const isAllSelected = useMemo(() => {
+    return visibleTaskIds.length > 0 && visibleTaskIds.every(id => selectedTaskIds.includes(id));
+  }, [visibleTaskIds, selectedTaskIds]);
+  const isSomeSelected = useMemo(() => {
+    return visibleTaskIds.some(id => selectedTaskIds.includes(id)) && !isAllSelected;
+  }, [visibleTaskIds, selectedTaskIds, isAllSelected]);
+
+  const handleSelectAllToggle = () => {
+    if (isAllSelected) {
+      dispatch(deselectTasks(visibleTaskIds));
+    } else {
+      dispatch(selectAllTasks(visibleTaskIds));
+    }
+  };
 
   const priorityColors: Record<TaskPriority, string> = {
     low: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300',
@@ -343,9 +361,23 @@ export const ListView = ({ projectId, onTaskClick }: { projectId: string; onTask
         <table className="w-full text-left text-sm whitespace-nowrap">
           <thead className="bg-gray-50/90 dark:bg-gray-900/90 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10 text-xs uppercase tracking-wider select-none">
             <tr>
+              {/* Select All Checkbox */}
+              <th className="pl-4 pr-1 py-3 w-[40px] text-center">
+                <input 
+                  type="checkbox" 
+                  checked={isAllSelected}
+                  ref={el => {
+                    if (el) el.indeterminate = isSomeSelected;
+                  }}
+                  onChange={handleSelectAllToggle}
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-700 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  title={isAllSelected ? "Deselect all" : "Select all"}
+                />
+              </th>
+
               <th 
                 onClick={() => handleSortClick('title')}
-                className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400 w-[38%] cursor-pointer hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-colors group"
+                className="px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 w-[36%] cursor-pointer hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-colors group"
               >
                 <div className="flex items-center space-x-1.5">
                   <span>Task Name</span>
@@ -398,7 +430,7 @@ export const ListView = ({ projectId, onTaskClick }: { projectId: string; onTask
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80">
             {tasks.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-16 text-center text-gray-400">
+                <td colSpan={6} className="px-6 py-16 text-center text-gray-400">
                   <p className="text-sm font-medium">No tasks found matching current filters.</p>
                 </td>
               </tr>
@@ -411,7 +443,7 @@ export const ListView = ({ projectId, onTaskClick }: { projectId: string; onTask
                     {/* Group Header Row (only when grouped) */}
                     {activeGroupBy !== 'none' && (
                       <tr className="bg-gray-50/70 dark:bg-gray-900/60 border-t border-b border-gray-200/70 dark:border-gray-800/70 select-none">
-                        <td colSpan={5} className="px-4 py-2">
+                        <td colSpan={6} className="px-4 py-2">
                           <div className="flex items-center justify-between">
                             <button
                               onClick={() => toggleGroup(group.id)}
@@ -454,7 +486,7 @@ export const ListView = ({ projectId, onTaskClick }: { projectId: string; onTask
                     {/* Group Task Rows */}
                     {!isCollapsed && group.tasks.length === 0 && activeGroupBy !== 'none' && (
                       <tr>
-                        <td colSpan={5} className="px-8 py-3 text-xs text-gray-400 italic bg-white dark:bg-gray-950">
+                        <td colSpan={6} className="px-8 py-3 text-xs text-gray-400 italic bg-white dark:bg-gray-950">
                           No tasks in this group.
                         </td>
                       </tr>
@@ -462,6 +494,7 @@ export const ListView = ({ projectId, onTaskClick }: { projectId: string; onTask
 
                     {!isCollapsed &&
                       group.tasks.map(task => {
+                        const isSelected = selectedTaskIds.includes(task.id);
                         const assignee = users.find(u => u.id === task.assigneeId);
                         const completedSubtasks = task.subtasks?.filter(s => s.isCompleted).length || 0;
                         const totalSubtasks = task.subtasks?.length || 0;
@@ -470,11 +503,25 @@ export const ListView = ({ projectId, onTaskClick }: { projectId: string; onTask
                         return (
                           <tr
                             key={task.id}
-                            className="hover:bg-gray-50/90 dark:hover:bg-gray-900/60 cursor-pointer transition-colors group"
+                            className={`${
+                              isSelected 
+                                ? 'bg-blue-50/70 dark:bg-blue-950/40 ring-1 ring-inset ring-blue-500/30' 
+                                : 'hover:bg-gray-50/90 dark:hover:bg-gray-900/60'
+                            } cursor-pointer transition-colors group`}
                             onClick={() => onTaskClick(task.id)}
                           >
+                            {/* Checkbox */}
+                            <td className="pl-4 pr-1 py-3 w-[40px] text-center" onClick={e => e.stopPropagation()}>
+                              <input 
+                                type="checkbox" 
+                                checked={isSelected}
+                                onChange={() => dispatch(toggleTaskSelection(task.id))}
+                                className="w-4 h-4 rounded border-gray-300 dark:border-gray-700 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                              />
+                            </td>
+
                             {/* Task Name */}
-                            <td className="px-6 py-3">
+                            <td className="px-4 py-3">
                               <div className="flex items-center space-x-2.5">
                                 <span className="font-medium text-gray-900 dark:text-white truncate max-w-sm">
                                   {task.title}

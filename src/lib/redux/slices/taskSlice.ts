@@ -91,6 +91,33 @@ const taskSlice = createSlice({
         }
       }
     },
+    convertTaskToSubtask: (state, action: PayloadAction<{ taskId: string; targetParentTaskId: string }>) => {
+      const sourceTask = state.entities[action.payload.taskId];
+      const targetParentTask = state.entities[action.payload.targetParentTaskId];
+      if (sourceTask && targetParentTask && sourceTask.id !== targetParentTask.id) {
+        const newSubtask: Subtask = {
+          id: nanoid(),
+          taskId: targetParentTask.id,
+          title: sourceTask.title,
+          isCompleted: sourceTask.status === 'done',
+        };
+        if (!targetParentTask.subtasks) {
+          targetParentTask.subtasks = [];
+        }
+        targetParentTask.subtasks.push(newSubtask);
+        // Also carry over subtasks of the source task
+        if (sourceTask.subtasks && sourceTask.subtasks.length > 0) {
+          sourceTask.subtasks.forEach(st => {
+            targetParentTask.subtasks.push({
+              ...st,
+              id: nanoid(),
+              taskId: targetParentTask.id,
+            });
+          });
+        }
+        tasksAdapter.removeOne(state, sourceTask.id);
+      }
+    },
     duplicateTask: (state, action: PayloadAction<string>) => {
       const task = state.entities[action.payload];
       if (task) {
@@ -129,6 +156,16 @@ const taskSlice = createSlice({
         task.comments.push(action.payload.comment);
       }
     },
+    updateComment: (state, action: PayloadAction<{ taskId: string; commentId: string; content: string }>) => {
+      const task = state.entities[action.payload.taskId];
+      if (task) {
+        const comment = task.comments.find(c => c.id === action.payload.commentId);
+        if (comment) {
+          comment.content = action.payload.content;
+          comment.updatedAt = new Date().toISOString();
+        }
+      }
+    },
     removeComment: (state, action: PayloadAction<{ taskId: string; commentId: string }>) => {
       const task = state.entities[action.payload.taskId];
       if (task) {
@@ -140,9 +177,9 @@ const taskSlice = createSlice({
 
 export const {
   addTask, addTasks, updateTask, removeTask, moveTaskStatus,
-  addSubtask, updateSubtask, removeSubtask, convertSubtaskToTask,
+  addSubtask, updateSubtask, removeSubtask, convertSubtaskToTask, convertTaskToSubtask,
   duplicateTask, bulkUpdateTasks, bulkRemoveTasks,
-  addAttachment, removeAttachment, addComment, removeComment
+  addAttachment, removeAttachment, addComment, updateComment, removeComment
 } = taskSlice.actions;
 
 export default taskSlice.reducer;

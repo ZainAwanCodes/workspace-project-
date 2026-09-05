@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { DEFAULT_KANBAN_COLUMNS } from '@/types/project';
-import { updateTask, removeTask, moveTaskStatus, duplicateTask } from '@/lib/redux/slices/taskSlice';
+import { updateTask, removeTask, moveTaskStatus, duplicateTask, convertTaskToSubtask } from '@/lib/redux/slices/taskSlice';
 import { logActivity } from '@/lib/redux/slices/activitySlice';
 import { Drawer } from '@/components/ui/Drawer';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
+import { Modal } from '@/components/ui/Modal';
 import { 
   Calendar, 
   Trash2, 
@@ -22,7 +23,9 @@ import {
   FileText,
   X,
   Clock,
-  Layers
+  Layers,
+  ListTree,
+  Search
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { CommentThread } from './CommentThread';
@@ -61,7 +64,39 @@ export const TaskDetailDrawer = ({ taskId, onClose }: TaskDetailDrawerProps) => 
   const [newTagInput, setNewTagInput] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
 
+  // Convert Task to Subtask state
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
+  const [selectedParentId, setSelectedParentId] = useState<string>('');
+  const [parentSearchQuery, setParentSearchQuery] = useState('');
+
+  const allTasks = useAppSelector(state => 
+    task ? Object.values(state.tasks.entities).filter((t): t is Task => !!t && t.projectId === task.projectId && t.id !== task.id) : []
+  );
+
   if (!task) return null;
+
+  const eligibleParentTasks = allTasks.filter(t => 
+    t.title.toLowerCase().includes(parentSearchQuery.toLowerCase())
+  );
+
+  const handleConvertToSubtask = () => {
+    if (!task || !selectedParentId) return;
+    const parent = allTasks.find(t => t.id === selectedParentId);
+    dispatch(convertTaskToSubtask({ taskId: task.id, targetParentTaskId: selectedParentId }));
+    if (currentUser) {
+      dispatch(logActivity({
+        id: nanoid(),
+        taskId: selectedParentId,
+        projectId: task.projectId,
+        actorId: currentUser.id,
+        action: 'subtask_updated',
+        details: `Converted task "${task.title}" to a subtask of "${parent?.title || 'task'}"`,
+        createdAt: new Date().toISOString(),
+      }));
+    }
+    setIsConvertModalOpen(false);
+    onClose();
+  };
 
   const columns = project?.kanbanColumns && project.kanbanColumns.length > 0 ? project.kanbanColumns : DEFAULT_KANBAN_COLUMNS;
 
@@ -473,6 +508,17 @@ export const TaskDetailDrawer = ({ taskId, onClose }: TaskDetailDrawerProps) => 
 
             <Button 
               variant="outline" 
+              className="w-full justify-start text-xs text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
+              onClick={() => {
+                setSelectedParentId(eligibleParentTasks[0]?.id || '');
+                setIsConvertModalOpen(true);
+              }}
+            >
+              <ListTree size={13} className="mr-2 text-indigo-500" /> Convert to Subtask
+            </Button>
+
+            <Button 
+              variant="outline" 
               className="w-full justify-start text-xs text-gray-700 dark:text-gray-300"
               onClick={handleCopyLink}
             >
@@ -498,6 +544,91 @@ export const TaskDetailDrawer = ({ taskId, onClose }: TaskDetailDrawerProps) => 
 
         </div>
       </div>
+
+      {/* Convert to Subtask Modal */}
+      <Modal
+        isOpen={isConvertModalOpen}
+        onClose={() => {
+          setIsConvertModalOpen(false);
+          setParentSearchQuery('');
+        }}
+        title="Convert Task to Subtask"
+        size="md"
+      >
+        <div className="p-5 space-y-4">
+          <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+            Select a target parent task in this project. <strong className="text-gray-900 dark:text-white">"{task.title}"</strong> will be converted into a subtask of the selected task, preserving any existing subtasks.
+          </p>
+
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search parent task by title..."
+              value={parentSearchQuery}
+              onChange={(e) => setParentSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-blue-500 outline-none"
+            />
+          </div>
+
+          <div className="max-h-52 overflow-y-auto space-y-1.5 border border-gray-200 dark:border-gray-800 rounded-lg p-2">
+            {eligibleParentTasks.length === 0 ? (
+              <div className="py-6 text-center text-xs text-gray-400">
+                No eligible parent tasks found in this project.
+              </div>
+            ) : (
+              eligibleParentTasks.map(t => {
+                const isSelected = selectedParentId === t.id;
+                const col = columns.find(c => c.id === t.status);
+
+                return (
+                  <div
+                    key={t.id}
+                    onClick={() => setSelectedParentId(t.id)}
+                    className={`p-2.5 rounded-lg cursor-pointer flex items-center justify-between text-xs transition-colors ${
+                      isSelected
+                        ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium border border-blue-200 dark:border-blue-800 shadow-2xs'
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-800/70 text-gray-800 dark:text-gray-200 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2 truncate">
+                      <span
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: col?.color || '#64748b' }}
+                      />
+                      <span className="truncate">{t.title}</span>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 font-medium flex-shrink-0 capitalize ml-2">
+                      {col?.title || t.status}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                setIsConvertModalOpen(false);
+                setParentSearchQuery('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              size="sm" 
+              disabled={!selectedParentId}
+              onClick={handleConvertToSubtask}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              Convert to Subtask
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </Drawer>
   );
 };

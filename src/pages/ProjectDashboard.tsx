@@ -16,6 +16,7 @@ import { DynamicIcon } from '@/utils/iconMap';
 
 import { ProjectSettingsModal } from '@/components/settings/ProjectSettingsModal';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
+import { BulkActionToolbar } from '@/components/tasks/BulkActionToolbar';
 import { Settings } from 'lucide-react';
 import { useCurrentRole, useHasPermission } from '@/lib/redux/usePermissions';
 import { Tooltip } from '@/components/ui/Tooltip';
@@ -213,6 +214,9 @@ export default function ProjectDashboard() {
         onClose={() => setIsSettingsModalOpen(false)}
         projectId={project.id}
       />
+
+      {/* Floating Multi-Select Bulk Action Toolbar */}
+      <BulkActionToolbar projectId={project.id} />
     </div>
   );
 }
