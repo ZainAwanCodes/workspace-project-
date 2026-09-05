@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "Workspace Project Manager",
+  "description": "A collaborative workspace and project management platform with Kanban, List, and Calendar views, tasks, team roles, and activity tracking.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
