@@ -4,10 +4,7 @@ import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
-import { Input } from '@/components/ui/Input';
-import { Modal } from '@/components/ui/Modal';
 import { setActiveViewMode } from '@/lib/redux/slices/uiSlice';
-import { addTask } from '@/lib/redux/slices/taskSlice';
 import { updateProject } from '@/lib/redux/slices/projectSlice';
 import { UserPlus, Layout, ShieldAlert, Archive, RotateCcw } from 'lucide-react';
 import { KanbanBoard } from '@/components/views/Kanban/KanbanBoard';
@@ -15,10 +12,10 @@ import { ListView } from '@/components/views/List/ListView';
 import { CalendarView } from '@/components/views/Calendar/CalendarView';
 import { TaskDetailDrawer } from '@/components/tasks/TaskDetailDrawer';
 import { FilterBar } from '@/components/filtering/FilterBar';
-import { nanoid } from '@reduxjs/toolkit';
 import { DynamicIcon } from '@/utils/iconMap';
 
 import { ProjectSettingsModal } from '@/components/settings/ProjectSettingsModal';
+import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { Settings } from 'lucide-react';
 import { useCurrentRole, useHasPermission } from '@/lib/redux/usePermissions';
 import { Tooltip } from '@/components/ui/Tooltip';
@@ -43,32 +40,7 @@ export default function ProjectDashboard() {
   
   // New Task State
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-
-  const handleCreateTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTaskTitle.trim() || !project) return;
-    
-    dispatch(addTask({
-      id: nanoid(),
-      projectId: project.id,
-      title: newTaskTitle,
-      description: '',
-      status: 'todo',
-      priority: 'medium',
-      assigneeId: currentUser?.id,
-      labels: [],
-      attachments: [],
-      subtasks: [],
-      comments: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
-    
-    setNewTaskTitle('');
-    setIsNewTaskModalOpen(false);
-  };
 
   const handleUnarchive = () => {
     if (!project) return;
@@ -230,21 +202,11 @@ export default function ProjectDashboard() {
       )}
 
       {/* New Task Modal */}
-      <Modal isOpen={isNewTaskModalOpen} onClose={() => setIsNewTaskModalOpen(false)} title="Create New Task" size="sm">
-        <form onSubmit={handleCreateTask} className="space-y-4">
-          <Input 
-            label="Task Title" 
-            placeholder="e.g. Design new landing page" 
-            value={newTaskTitle} 
-            onChange={(e) => setNewTaskTitle(e.target.value)} 
-            autoFocus 
-          />
-          <div className="pt-4 flex justify-end space-x-3 border-t border-gray-100 dark:border-gray-800">
-            <Button type="button" variant="ghost" onClick={() => setIsNewTaskModalOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={!newTaskTitle.trim()}>Create Task</Button>
-          </div>
-        </form>
-      </Modal>
+      <CreateTaskModal 
+        isOpen={isNewTaskModalOpen} 
+        onClose={() => setIsNewTaskModalOpen(false)} 
+        projectId={project.id} 
+      />
 
       <ProjectSettingsModal 
         isOpen={isSettingsModalOpen}

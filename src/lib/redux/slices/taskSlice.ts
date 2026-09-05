@@ -128,6 +128,12 @@ const taskSlice = createSlice({
       if (task) {
         task.comments.push(action.payload.comment);
       }
+    },
+    removeComment: (state, action: PayloadAction<{ taskId: string; commentId: string }>) => {
+      const task = state.entities[action.payload.taskId];
+      if (task) {
+        task.comments = task.comments.filter(c => c.id !== action.payload.commentId);
+      }
     }
   }
 });
@@ -136,7 +142,7 @@ export const {
   addTask, addTasks, updateTask, removeTask, moveTaskStatus,
   addSubtask, updateSubtask, removeSubtask, convertSubtaskToTask,
   duplicateTask, bulkUpdateTasks, bulkRemoveTasks,
-  addAttachment, removeAttachment, addComment
+  addAttachment, removeAttachment, addComment, removeComment
 } = taskSlice.actions;
 
 export default taskSlice.reducer;

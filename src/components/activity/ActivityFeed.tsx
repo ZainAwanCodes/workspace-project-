@@ -17,6 +17,31 @@ export const ActivityFeed = ({ taskId }: { taskId?: string }) => {
     return <div className="text-sm text-gray-500 text-center py-4">No activity yet.</div>;
   }
 
+  const getActionText = (action: string) => {
+    switch (action) {
+      case 'created':
+        return 'created this task';
+      case 'status_changed':
+        return 'updated status';
+      case 'priority_changed':
+        return 'updated priority';
+      case 'assigned':
+        return 'updated assignee';
+      case 'commented':
+        return 'commented';
+      case 'edited':
+        return 'updated details';
+      case 'subtask_updated':
+        return 'updated subtasks';
+      case 'attachment_added':
+        return 'added an attachment';
+      case 'deleted':
+        return 'deleted';
+      default:
+        return action.replace('_', ' ');
+    }
+  };
+
   return (
     <div className="space-y-4">
       {activities.map((activity) => {
@@ -33,16 +58,16 @@ export const ActivityFeed = ({ taskId }: { taskId?: string }) => {
               <span className="font-semibold text-gray-900 dark:text-gray-100">
                 {actor?.name || 'Unknown User'}
               </span>{' '}
-              <span className="text-gray-600 dark:text-gray-400">
-                {activity.action === 'created' ? 'created this task' : activity.action}
+              <span className="text-gray-500 dark:text-gray-400">
+                {getActionText(activity.action)}
               </span>
               {' '}
               {activity.details && activity.action !== 'created' && (
-                <span className="text-gray-700 dark:text-gray-300 font-medium">
+                <span className="text-gray-800 dark:text-gray-200 font-medium">
                   {activity.details}
                 </span>
               )}
-              <div className="text-xs text-gray-500 mt-0.5">
+              <div className="text-xs text-gray-400 mt-0.5">
                 {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
               </div>
             </div>

@@ -20,6 +20,7 @@ import { selectFilteredTasks } from '@/lib/redux/selectors/taskSelectors';
 import { KanbanColumn } from './KanbanColumn';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { TaskDetailDrawer } from '@/components/tasks/TaskDetailDrawer';
+import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 
 const COLUMNS: { id: TaskStatus; title: string }[] = [
   { id: 'todo', title: 'To Do' },
@@ -34,6 +35,8 @@ export const KanbanBoard = ({ projectId, readOnly = false }: { projectId: string
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [initialStatus, setInitialStatus] = useState<TaskStatus>('todo');
 
   const activeTask = useMemo(() => tasks.find((t) => t.id === activeId), [activeId, tasks]);
 
@@ -114,6 +117,10 @@ export const KanbanBoard = ({ projectId, readOnly = false }: { projectId: string
               column={col} 
               tasks={tasks.filter(t => t.status === col.id)} 
               onTaskClick={(taskId) => setSelectedTaskId(taskId)}
+              onAddTask={readOnly ? undefined : (status) => {
+                setInitialStatus(status);
+                setCreateModalOpen(true);
+              }}
             />
           ))}
 
@@ -133,6 +140,14 @@ export const KanbanBoard = ({ projectId, readOnly = false }: { projectId: string
       <TaskDetailDrawer 
         taskId={selectedTaskId} 
         onClose={() => setSelectedTaskId(null)} 
+      />
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        projectId={projectId}
+        initialStatus={initialStatus}
       />
     </>
   );

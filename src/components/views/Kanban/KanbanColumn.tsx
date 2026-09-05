@@ -4,15 +4,17 @@ import { CSS } from '@dnd-kit/utilities';
 import { Task, TaskStatus } from '@/types/task';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { useDroppable } from '@dnd-kit/core';
+import { Plus } from 'lucide-react';
 
 interface KanbanColumnProps {
   column: { id: TaskStatus; title: string };
   tasks: Task[];
   onTaskClick: (taskId: string) => void;
+  onAddTask?: (status: TaskStatus) => void;
   key?: React.Key;
 }
 
-export const KanbanColumn = ({ column, tasks, onTaskClick }: KanbanColumnProps) => {
+export const KanbanColumn = ({ column, tasks, onTaskClick, onAddTask }: KanbanColumnProps) => {
   const taskIds = useMemo(() => tasks.map(t => t.id), [tasks]);
 
   const { setNodeRef, isOver } = useDroppable({
@@ -35,6 +37,16 @@ export const KanbanColumn = ({ column, tasks, onTaskClick }: KanbanColumnProps) 
             {tasks.length}
           </span>
         </div>
+
+        {onAddTask && (
+          <button
+            onClick={() => onAddTask(column.id)}
+            className="p-1 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-800 transition-colors"
+            title={`Add task to ${column.title}`}
+          >
+            <Plus size={15} />
+          </button>
+        )}
       </div>
 
       {/* Droppable Area */}
