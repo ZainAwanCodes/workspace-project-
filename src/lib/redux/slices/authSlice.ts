@@ -15,9 +15,9 @@ const mockUsers: User[] = [
 ];
 
 const initialState: AuthState = {
-  currentUser: mockUsers[0],
+  currentUser: null,
   users: mockUsers,
-  isAuthenticated: true,
+  isAuthenticated: false,
 };
 
 const authSlice = createSlice({

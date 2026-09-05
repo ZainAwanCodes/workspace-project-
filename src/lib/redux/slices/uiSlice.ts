@@ -92,7 +92,12 @@ const initialState: UIState = {
   },
   filterPresets: DEFAULT_FILTER_PRESETS,
   activePresetId: null,
-  theme: 'light',
+  theme: (() => {
+    if (typeof window === 'undefined') return 'light';
+    const stored = localStorage.getItem('wm-theme');
+    if (stored === 'dark' || stored === 'light') return stored;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  })() as 'light' | 'dark',
   sidebarOpen: true,
   commandPaletteOpen: false,
   shortcutsModalOpen: false,

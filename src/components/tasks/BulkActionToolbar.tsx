@@ -161,15 +161,15 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({ projectId 
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-[95vw] sm:max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-200">
-      <div className="bg-gray-900/95 text-white dark:bg-gray-800/95 dark:text-gray-100 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-2xl border border-gray-700/60 flex items-center space-x-3 text-xs">
+    <div className="fixed bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-[96vw] sm:max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-200">
+      <div className="bg-gray-900/95 text-white dark:bg-gray-800/95 dark:text-gray-100 backdrop-blur-md px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl shadow-2xl border border-gray-700/60 flex items-center space-x-1.5 sm:space-x-3 text-xs">
         {/* Count & Clear */}
-        <div className="flex items-center space-x-2 pr-2 border-r border-gray-700">
-          <div className="flex items-center space-x-1.5 font-medium">
-            <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-bold">
+        <div className="flex items-center space-x-1.5 pr-1.5 sm:pr-2 border-r border-gray-700 flex-shrink-0">
+          <div className="flex items-center space-x-1 sm:space-x-1.5 font-medium">
+            <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] sm:text-[11px] font-bold">
               {selectedTaskIds.length}
             </span>
-            <span className="hidden sm:inline">selected</span>
+            <span className="hidden xs:inline sm:inline">selected</span>
           </div>
           <button
             onClick={() => dispatch(clearTaskSelection())}
@@ -181,11 +181,11 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({ projectId 
         </div>
 
         {/* Bulk Action Controls */}
-        <div className="flex items-center space-x-1.5 flex-wrap">
+        <div className="flex items-center space-x-1 sm:space-x-1.5 flex-wrap">
           {/* Status Dropdown */}
           <Dropdown>
             <DropdownTrigger>
-              <button className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 hover:text-white transition-colors">
+              <button className="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 hover:text-white transition-colors text-[11px] sm:text-xs">
                 <Layers size={13} className="text-blue-400" />
                 <span>Status</span>
               </button>

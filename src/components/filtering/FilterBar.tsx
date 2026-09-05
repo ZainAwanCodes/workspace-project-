@@ -144,7 +144,7 @@ export const FilterBar = () => {
             )}
           </Button>
         </DropdownTrigger>
-        <DropdownContent align="right" className="w-72 p-1 space-y-1">
+        <DropdownContent align="right" className="w-[calc(100vw-2rem)] sm:w-72 max-w-xs p-1 space-y-1">
           <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <span>Filter Presets</span>
             <Sparkles size={12} className="text-purple-500" />
@@ -247,7 +247,7 @@ export const FilterBar = () => {
             )}
           </Button>
         </DropdownTrigger>
-        <DropdownContent align="right" className="w-72 p-4 space-y-4 max-h-[85vh] overflow-y-auto">
+        <DropdownContent align="right" className="w-[calc(100vw-2rem)] sm:w-72 max-w-xs p-4 space-y-4 max-h-[85vh] overflow-y-auto">
           {/* Priority */}
           <div>
             <h4 className="text-xs font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-2">

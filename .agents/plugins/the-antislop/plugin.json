@@ -1,0 +1,21 @@
+{
+  "name": "the-antislop",
+  "displayName": "The Antislop",
+  "description": "Detect and fix AI-generated writing patterns. 35+ patterns, tiered scoring, editor mode.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Jim Christian",
+    "email": "hello@jimchristian.net",
+    "url": "https://jimchristian.net"
+  },
+  "homepage": "https://github.com/aplaceforallmystuff/the-antislop#readme",
+  "repository": "https://github.com/aplaceforallmystuff/the-antislop",
+  "license": "MIT",
+  "keywords": [
+    "writing",
+    "ai-slop",
+    "editing",
+    "humanize",
+    "detection"
+  ]
+}

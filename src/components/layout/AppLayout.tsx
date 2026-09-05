@@ -8,7 +8,8 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { 
   setCommandPaletteOpen, 
   setShortcutsModalOpen, 
-  setActiveViewMode 
+  setActiveViewMode,
+  setSidebarOpen
 } from '@/lib/redux/slices/uiSlice';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
 
@@ -68,7 +69,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
     },
   ]);
 
-  // Sync Redux theme state with document.documentElement class for Tailwind Dark Mode
+  // Sync Redux theme → DOM class + localStorage (single source of truth)
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') {
@@ -78,10 +79,18 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
       root.classList.remove('dark');
       root.style.colorScheme = 'light';
     }
+    localStorage.setItem('wm-theme', theme);
   }, [theme]);
 
+  // Collapse sidebar initially on mobile screens (< 768px)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      dispatch(setSidebarOpen(false));
+    }
+  }, [dispatch]);
+
   return (
-    <div className="flex h-screen overflow-hidden bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans selection:bg-blue-200 dark:selection:bg-blue-900 transition-colors duration-200">
+    <div className="flex h-screen overflow-hidden font-sans transition-colors duration-200" style={{ background: 'var(--bg)', color: 'var(--text-primary)', ['--tw-selection-bg' as string]: 'var(--accent-muted)' }}>
       
       {/* Sidebar Component */}
       <Sidebar />
@@ -91,7 +100,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
         <Header />
         
         {/* Main Workspace Viewport */}
-        <main className="flex-1 overflow-auto relative focus:outline-none bg-white dark:bg-gray-950">
+        <main className="flex-1 overflow-auto relative focus:outline-none" style={{ background: 'var(--bg)' }}>
           {children}
         </main>
       </div>

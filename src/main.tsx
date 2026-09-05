@@ -7,6 +7,13 @@ import { ToastProvider } from './providers/ToastProvider';
 import App from './App.tsx';
 import './index.css';
 
+// Pre-paint dark class to eliminate FOUC
+const stored = localStorage.getItem('wm-theme');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+if (stored === 'dark' || (!stored && prefersDark)) {
+  document.documentElement.classList.add('dark');
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>

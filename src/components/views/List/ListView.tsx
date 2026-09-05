@@ -357,8 +357,8 @@ export const ListView = ({ projectId, onTaskClick }: { projectId: string; onTask
       </div>
 
       {/* Table Container */}
-      <div className="overflow-x-auto flex-1">
-        <table className="w-full text-left text-sm whitespace-nowrap">
+      <div className="overflow-x-auto flex-1 custom-scrollbar">
+        <table className="w-full text-left text-sm whitespace-nowrap min-w-[640px]">
           <thead className="bg-gray-50/90 dark:bg-gray-900/90 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10 text-xs uppercase tracking-wider select-none">
             <tr>
               {/* Select All Checkbox */}

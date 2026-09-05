@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAppSelector } from '@/lib/redux/hooks';
 import { AppLayout } from '@/components/layout/AppLayout';
+import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import WorkspaceDashboard from '@/pages/WorkspaceDashboard';
 import ProjectDashboard from '@/pages/ProjectDashboard';
@@ -40,11 +41,12 @@ const WorkspaceRedirect = () => {
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       
       <Route element={<ProtectedRoute />}>
-        {/* Root redirects to active workspace */}
-        <Route path="/" element={<WorkspaceRedirect />} />
+        {/* /app redirects to active workspace */}
+        <Route path="/app" element={<WorkspaceRedirect />} />
         
         {/* Workspace Routes */}
         <Route path="/w/:workspaceId" element={<WorkspaceDashboard />} />

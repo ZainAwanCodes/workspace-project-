@@ -117,7 +117,7 @@ export const KanbanColumn = ({
     <div
       ref={setColumnNodeRef}
       style={columnStyle}
-      className={`flex flex-col w-[310px] min-w-[310px] bg-gray-50/70 dark:bg-gray-900/60 rounded-xl flex-shrink-0 border border-gray-200 dark:border-gray-800 h-full max-h-full transition-opacity ${
+      className={`flex flex-col w-[85vw] sm:w-[310px] min-w-[270px] sm:min-w-[310px] snap-center bg-gray-50/70 dark:bg-gray-900/60 rounded-xl flex-shrink-0 border border-gray-200 dark:border-gray-800 h-full max-h-full transition-opacity ${
         isColumnDragging ? 'opacity-40 shadow-xl ring-2 ring-blue-500' : 'opacity-100'
       }`}
     >

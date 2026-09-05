@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { setActiveViewMode } from '@/lib/redux/slices/uiSlice';
 import { updateProject } from '@/lib/redux/slices/projectSlice';
-import { UserPlus, Layout, ShieldAlert, Archive, RotateCcw } from 'lucide-react';
+import { UserPlus, Layout, ShieldAlert, Archive, RotateCcw, ArrowLeft, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { KanbanBoard } from '@/components/views/Kanban/KanbanBoard';
 import { ListView } from '@/components/views/List/ListView';
 import { CalendarView } from '@/components/views/Calendar/CalendarView';
@@ -23,11 +24,17 @@ import { Tooltip } from '@/components/ui/Tooltip';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 export default function ProjectDashboard() {
-  const { projectId } = useParams();
+  const { workspaceId, projectId } = useParams();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   
   const project = useAppSelector(state => 
     projectId ? state.projects.entities[projectId] : null
+  );
+
+  const targetWorkspaceId = workspaceId || project?.workspaceId;
+  const workspace = useAppSelector(state => 
+    targetWorkspaceId ? state.workspaces.entities[targetWorkspaceId] : null
   );
   
   const activeViewMode = useAppSelector(state => state.ui.activeViewMode);
@@ -69,7 +76,13 @@ export default function ProjectDashboard() {
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center h-full">
         <Layout size={48} className="text-gray-300 dark:text-gray-700 mb-4" />
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Project not found</h2>
-        <p className="text-gray-500 dark:text-gray-400">The project you are looking for does not exist.</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-6">The project you are looking for does not exist or has been removed.</p>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => targetWorkspaceId ? navigate(`/w/${targetWorkspaceId}`) : navigate(-1)}>
+            <ArrowLeft size={15} className="mr-1.5" /> Back to Workspace
+          </Button>
+          <Button onClick={() => navigate('/')}>Return Home</Button>
+        </div>
       </div>
     );
   }
@@ -94,20 +107,62 @@ export default function ProjectDashboard() {
       )}
 
       {/* Project Header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex-shrink-0">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0">
+        {/* Back Navigation Bar & Breadcrumbs */}
+        <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-gray-100 dark:border-gray-800/60">
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              onClick={() => {
+                if (targetWorkspaceId) {
+                  navigate(`/w/${targetWorkspaceId}`);
+                } else if (window.history.state && window.history.state.idx > 0) {
+                  navigate(-1);
+                } else {
+                  navigate('/app');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all group hover:bg-gray-100 dark:hover:bg-gray-800 flex-shrink-0"
+              style={{
+                background: 'var(--surface-raised)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-secondary)',
+              }}
+              title="Back to Workspace"
+              aria-label="Back to Workspace"
+            >
+              <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
+              <span className="font-semibold truncate max-w-[120px] sm:max-w-[200px]">
+                Back to {workspace?.name || 'Workspace'}
+              </span>
+            </button>
+            <span className="text-gray-300 dark:text-gray-700 text-xs">/</span>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 truncate max-w-[140px] sm:max-w-xs">
+              {project.name}
+            </span>
+          </div>
+
+          <button
+            onClick={() => navigate('/')}
+            className="hidden sm:inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0"
+            title="Go to website landing page"
+          >
+            <span>Website</span>
+            <ExternalLink size={12} />
+          </button>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 sm:mb-4">
+          <div className="flex items-center space-x-3 min-w-0">
             <div 
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm shadow-xs flex-shrink-0" 
               style={{ backgroundColor: project.color || '#3b82f6' }} 
             >
               <DynamicIcon name={project.icon || 'layout'} size={18} />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center">
-                {project.name}
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center flex-wrap gap-2 truncate">
+                <span className="truncate">{project.name}</span>
                 {project.isArchived && (
-                  <span className="ml-2.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                     Archived
                   </span>
                 )}
@@ -120,11 +175,11 @@ export default function ProjectDashboard() {
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-4 self-end sm:self-auto">
             {/* Project Members */}
             <div className="flex items-center">
               <div 
-                className="flex -space-x-2 mr-3 cursor-pointer hover:opacity-80 transition-opacity"
+                className="flex -space-x-2 mr-2.5 sm:mr-3 cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => setIsSettingsModalOpen(true)}
                 title="Manage Project Members"
               >
@@ -138,10 +193,11 @@ export default function ProjectDashboard() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="rounded-full h-8 px-3 text-xs"
+                className="rounded-full h-8 px-2.5 sm:px-3 text-xs"
                 onClick={() => setIsSettingsModalOpen(true)}
               >
-                <UserPlus size={14} className="mr-1.5" /> Members ({project.memberIds.length})
+                <UserPlus size={14} className="mr-1 sm:mr-1.5" /> 
+                <span className="hidden xs:inline">Members</span> ({project.memberIds.length})
               </Button>
             </div>
             
@@ -156,40 +212,40 @@ export default function ProjectDashboard() {
         </div>
 
         {/* View Tabs & Filters */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <Tabs 
             defaultValue={activeViewMode} 
             value={activeViewMode}
             onValueChange={(val) => dispatch(setActiveViewMode(val as 'kanban' | 'list' | 'calendar'))}
-            className="w-auto"
+            className="w-full sm:w-auto"
           >
-            <TabsList className="mb-0 border-none space-x-1.5">
-              <TabsTrigger value="kanban" className="flex items-center space-x-1.5">
+            <TabsList className="mb-0 border-none space-x-1 sm:space-x-1.5 w-full sm:w-auto justify-start">
+              <TabsTrigger value="kanban" className="flex items-center space-x-1 sm:space-x-1.5 flex-1 sm:flex-initial justify-center text-xs sm:text-sm">
                 <span>Board</span>
                 <kbd className="hidden md:inline-block px-1 py-0.2 text-[9px] font-sans font-semibold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">1</kbd>
               </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center space-x-1.5">
+              <TabsTrigger value="list" className="flex items-center space-x-1 sm:space-x-1.5 flex-1 sm:flex-initial justify-center text-xs sm:text-sm">
                 <span>List</span>
                 <kbd className="hidden md:inline-block px-1 py-0.2 text-[9px] font-sans font-semibold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">2</kbd>
               </TabsTrigger>
-              <TabsTrigger value="calendar" className="flex items-center space-x-1.5">
+              <TabsTrigger value="calendar" className="flex items-center space-x-1 sm:space-x-1.5 flex-1 sm:flex-initial justify-center text-xs sm:text-sm">
                 <span>Calendar</span>
                 <kbd className="hidden md:inline-block px-1 py-0.2 text-[9px] font-sans font-semibold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">3</kbd>
               </TabsTrigger>
             </TabsList>
           </Tabs>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap gap-y-2 justify-between sm:justify-end w-full sm:w-auto">
             <FilterBar />
             {canCreateTask ? (
-              <Button size="sm" onClick={() => setIsNewTaskModalOpen(true)} className="flex items-center space-x-1.5 shadow-xs">
+              <Button size="sm" onClick={() => setIsNewTaskModalOpen(true)} className="flex items-center space-x-1.5 shadow-xs whitespace-nowrap">
                 <span>New Task</span>
                 <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[10px] font-sans font-semibold bg-blue-700/60 text-blue-100 rounded">C</kbd>
               </Button>
             ) : (
               <Tooltip side="bottom" content="You do not have permission to create tasks.">
                 <div>
-                  <Button disabled size="sm" className="opacity-60 cursor-not-allowed">
+                  <Button disabled size="sm" className="opacity-60 cursor-not-allowed whitespace-nowrap">
                     <ShieldAlert size={14} className="mr-1.5 text-white/70" /> New Task
                   </Button>
                 </div>
@@ -200,16 +256,27 @@ export default function ProjectDashboard() {
       </div>
 
       {/* Main Board/View Area */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-6">
-        {activeViewMode === 'kanban' && (
-          <KanbanBoard projectId={project.id} />
-        )}
-        {activeViewMode === 'list' && (
-          <ListView projectId={project.id} onTaskClick={(id) => setSelectedTaskId(id)} />
-        )}
-        {activeViewMode === 'calendar' && (
-          <CalendarView projectId={project.id} onTaskClick={(id) => setSelectedTaskId(id)} />
-        )}
+      <div className="flex-1 overflow-x-auto overflow-y-hidden p-2 sm:p-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeViewMode}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="h-full flex flex-col"
+          >
+            {activeViewMode === 'kanban' && (
+              <KanbanBoard projectId={project.id} />
+            )}
+            {activeViewMode === 'list' && (
+              <ListView projectId={project.id} onTaskClick={(id) => setSelectedTaskId(id)} />
+            )}
+            {activeViewMode === 'calendar' && (
+              <CalendarView projectId={project.id} onTaskClick={(id) => setSelectedTaskId(id)} />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Task Detail Drawer for List and Calendar views (Kanban handles its own) */}

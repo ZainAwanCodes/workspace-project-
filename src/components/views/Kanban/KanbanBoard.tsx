@@ -224,7 +224,7 @@ export const KanbanBoard = ({ projectId, readOnly = false }: { projectId: string
 
   return (
     <>
-      <div className="h-full w-full flex overflow-x-auto pb-4 gap-6 items-start">
+      <div className="h-full w-full flex overflow-x-auto pb-4 gap-3.5 sm:gap-6 items-start snap-x snap-mandatory sm:snap-none custom-scrollbar">
         <DndContext
           sensors={activeSensors}
           collisionDetection={closestCorners}
