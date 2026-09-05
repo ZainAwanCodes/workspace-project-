@@ -12,6 +12,7 @@ import SignatureFeature from '@/components/landing/SignatureFeature';
 import TrustSignals from '@/components/landing/TrustSignals';
 import FinalCTA from '@/components/landing/FinalCTA';
 import Footer from '@/components/landing/Footer';
+import { ParallaxComponent } from '@/components/ui/parallax-scrolling';
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ export default function Landing() {
 
       <main>
         <Hero onGetStarted={handleGetStarted} />
+        <ParallaxComponent />
         <TrustStrip />
         <ProblemReframe />
         <CapabilityShowcase />
