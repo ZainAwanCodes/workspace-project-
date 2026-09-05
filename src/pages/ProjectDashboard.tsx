@@ -16,6 +16,9 @@ import { TaskDetailDrawer } from '@/components/tasks/TaskDetailDrawer';
 import { FilterBar } from '@/components/filtering/FilterBar';
 import { nanoid } from '@reduxjs/toolkit';
 
+import { ProjectSettingsModal } from '@/components/settings/ProjectSettingsModal';
+import { Settings } from 'lucide-react';
+
 export default function ProjectDashboard() {
   const { projectId } = useParams();
   const dispatch = useAppDispatch();
@@ -33,6 +36,7 @@ export default function ProjectDashboard() {
   // New Task State
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,8 +103,8 @@ export default function ProjectDashboard() {
             
             <div className="w-px h-6 bg-gray-200 dark:bg-gray-800" />
             
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal size={18} />
+            <Button variant="ghost" size="icon" onClick={() => setIsSettingsModalOpen(true)}>
+              <Settings size={18} />
             </Button>
           </div>
         </div>
@@ -171,6 +175,12 @@ export default function ProjectDashboard() {
           </div>
         </form>
       </Modal>
+
+      <ProjectSettingsModal 
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        projectId={project.id}
+      />
     </div>
   );
 }

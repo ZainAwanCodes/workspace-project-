@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Avatar } from '@/components/ui/Avatar';
 import { Plus, Briefcase, Layout, Users, Settings } from 'lucide-react';
 import { nanoid } from '@reduxjs/toolkit';
+import { WorkspaceSettingsModal } from '@/components/settings/WorkspaceSettingsModal';
 
 export default function WorkspaceDashboard() {
   const { workspaceId } = useParams();
@@ -28,6 +29,8 @@ export default function WorkspaceDashboard() {
 
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
+
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   if (!workspace) {
     return (
@@ -77,7 +80,9 @@ export default function WorkspaceDashboard() {
             </div>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline"><Settings size={16} className="mr-2" />Settings</Button>
+            <Button variant="outline" onClick={() => setIsSettingsModalOpen(true)}>
+              <Settings size={16} className="mr-2" />Settings
+            </Button>
             <Button onClick={() => setIsNewProjectModalOpen(true)}>
               <Plus size={16} className="mr-2" /> New Project
             </Button>
@@ -157,6 +162,11 @@ export default function WorkspaceDashboard() {
           </div>
         </form>
       </Modal>
+
+      <WorkspaceSettingsModal 
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
     </div>
   );
 }
