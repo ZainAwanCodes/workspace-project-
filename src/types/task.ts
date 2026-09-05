@@ -1,4 +1,4 @@
-export type TaskStatus = 'todo' | 'in-progress' | 'review' | 'done';
+export type TaskStatus = 'todo' | 'in-progress' | 'review' | 'done' | string;
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 export interface FileAttachment {

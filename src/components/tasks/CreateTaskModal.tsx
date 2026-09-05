@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks';
 import { addTask } from '@/lib/redux/slices/taskSlice';
 import { logActivity } from '@/lib/redux/slices/activitySlice';
 import { Task, TaskStatus, TaskPriority, Subtask } from '@/types/task';
+import { DEFAULT_KANBAN_COLUMNS } from '@/types/project';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -27,6 +28,7 @@ interface CreateTaskModalProps {
   projectId: string;
   defaultStatus?: TaskStatus;
   initialStatus?: TaskStatus;
+  initialDueDate?: string;
 }
 
 const COMMON_TAGS = ['frontend', 'backend', 'design', 'bug', 'feature', 'marketing', 'docs', 'urgent'];
@@ -37,11 +39,13 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   projectId,
   defaultStatus = 'todo',
   initialStatus,
+  initialDueDate,
 }) => {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector(state => state.auth.currentUser);
   const users = useAppSelector(state => state.auth.users);
   const project = useAppSelector(state => state.projects.entities[projectId]);
+  const columns = project?.kanbanColumns && project.kanbanColumns.length > 0 ? project.kanbanColumns : DEFAULT_KANBAN_COLUMNS;
 
   const targetStatus = initialStatus || defaultStatus;
 
@@ -51,7 +55,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   const [status, setStatus] = useState<TaskStatus>(targetStatus);
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [assigneeId, setAssigneeId] = useState<string | undefined>(currentUser?.id);
-  const [dueDate, setDueDate] = useState<string>('');
+  const [dueDate, setDueDate] = useState<string>(initialDueDate || '');
   const [labels, setLabels] = useState<string[]>([]);
   const [customTagInput, setCustomTagInput] = useState('');
   const [subtasks, setSubtasks] = useState<string[]>([]);
@@ -61,8 +65,11 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setStatus(targetStatus);
+      if (initialDueDate) {
+        setDueDate(initialDueDate);
+      }
     }
-  }, [isOpen, targetStatus]);
+  }, [isOpen, targetStatus, initialDueDate]);
 
   // Filter project members
   const projectMembers = users.filter(u => 
@@ -214,10 +221,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               onChange={(e) => setStatus(e.target.value as TaskStatus)}
               className="w-full text-sm rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="todo">To Do</option>
-              <option value="in-progress">In Progress</option>
-              <option value="review">Review</option>
-              <option value="done">Done</option>
+              {columns.map(c => (
+                <option key={c.id} value={c.id}>{c.title}</option>
+              ))}
             </select>
           </div>
 

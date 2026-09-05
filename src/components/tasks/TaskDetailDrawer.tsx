@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
+import { DEFAULT_KANBAN_COLUMNS } from '@/types/project';
 import { updateTask, removeTask, moveTaskStatus, duplicateTask } from '@/lib/redux/slices/taskSlice';
 import { logActivity } from '@/lib/redux/slices/activitySlice';
 import { Drawer } from '@/components/ui/Drawer';
@@ -61,6 +62,8 @@ export const TaskDetailDrawer = ({ taskId, onClose }: TaskDetailDrawerProps) => 
   const [isAddingTag, setIsAddingTag] = useState(false);
 
   if (!task) return null;
+
+  const columns = project?.kanbanColumns && project.kanbanColumns.length > 0 ? project.kanbanColumns : DEFAULT_KANBAN_COLUMNS;
 
   const assignee = users.find(u => u.id === task.assigneeId);
   const projectMembers = users.filter(u => 
@@ -293,10 +296,9 @@ export const TaskDetailDrawer = ({ taskId, onClose }: TaskDetailDrawerProps) => 
                 onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}
                 className="w-full rounded-lg border-gray-200 dark:border-gray-700 shadow-xs focus:border-blue-500 focus:ring-blue-500 text-xs font-medium bg-white dark:bg-gray-950 py-2"
               >
-                <option value="todo">To Do</option>
-                <option value="in-progress">In Progress</option>
-                <option value="review">In Review</option>
-                <option value="done">Done</option>
+                {columns.map(c => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
               </select>
             </div>
 
