@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Search, Bell, Menu, User as UserIcon, LogOut, Check } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { setSidebarOpen, setCommandPaletteOpen } from '@/lib/redux/slices/uiSlice';
@@ -6,6 +6,7 @@ import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from '../ui/
 import { switchUser } from '@/lib/redux/slices/authSlice';
 import { markAllAsRead } from '@/lib/redux/slices/notificationSlice';
 import { formatDistanceToNow } from 'date-fns';
+import { UserProfileModal } from '../settings/UserProfileModal';
 
 export const Header = () => {
   const dispatch = useAppDispatch();
@@ -17,6 +18,8 @@ export const Header = () => {
   
   const notifications = useAppSelector(state => Object.values(state.notifications.entities));
   const unreadCount = notifications.filter(n => n?.isRead === false).length;
+
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   return (
     <header className="h-14 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-between px-4 flex-shrink-0 z-10">
@@ -145,7 +148,7 @@ export const Header = () => {
               ))}
             </div>
             <div className="border-t border-gray-100 dark:border-gray-800 py-1">
-              <DropdownItem className="flex items-center">
+              <DropdownItem className="flex items-center" onClick={() => setIsProfileModalOpen(true)}>
                 <UserIcon size={14} className="mr-2" /> Profile Settings
               </DropdownItem>
               <DropdownItem destructive className="flex items-center">
@@ -156,6 +159,11 @@ export const Header = () => {
         </Dropdown>
         
       </div>
+      
+      <UserProfileModal 
+        isOpen={isProfileModalOpen} 
+        onClose={() => setIsProfileModalOpen(false)} 
+      />
     </header>
   );
 };
