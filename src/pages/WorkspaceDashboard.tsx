@@ -4,10 +4,12 @@ import { useAppSelector } from '@/lib/redux/hooks';
 import { useCurrentRole, useHasPermission } from '@/lib/redux/usePermissions';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
-import { Plus, Layout, Users, Settings, ShieldAlert, Archive, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Plus, Layout, Users, Settings, ShieldAlert, Archive, ArrowLeft, ExternalLink, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { WorkspaceSettingsModal } from '@/components/settings/WorkspaceSettingsModal';
 import { CreateProjectModal } from '@/components/settings/CreateProjectModal';
+import { DeleteWorkspaceModal } from '@/components/layout/DeleteWorkspaceModal';
+import { CreateWorkspaceModal } from '@/components/layout/CreateWorkspaceModal';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { DynamicIcon } from '@/utils/iconMap';
 
@@ -36,6 +38,8 @@ export default function WorkspaceDashboard() {
 
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCreateWorkspaceModalOpen, setIsCreateWorkspaceModalOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
 
   if (!workspace) {
@@ -48,8 +52,14 @@ export default function WorkspaceDashboard() {
           <Button variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft size={15} className="mr-1.5" /> Go Back
           </Button>
-          <Button onClick={() => navigate('/')}>Return Home</Button>
+          <Button onClick={() => setIsCreateWorkspaceModalOpen(true)}>
+            <Plus size={15} className="mr-1.5" /> Create Workspace
+          </Button>
         </div>
+        <CreateWorkspaceModal
+          isOpen={isCreateWorkspaceModalOpen}
+          onClose={() => setIsCreateWorkspaceModalOpen(false)}
+        />
       </div>
     );
   }
@@ -123,9 +133,20 @@ export default function WorkspaceDashboard() {
             </div>
             <div className="flex items-center space-x-2.5 sm:space-x-3 flex-wrap">
               {canManageWorkspace && (
-                <Button variant="outline" size="sm" onClick={() => setIsSettingsModalOpen(true)}>
-                  <Settings size={15} className="mr-1.5" />Settings
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" onClick={() => setIsSettingsModalOpen(true)}>
+                    <Settings size={15} className="mr-1.5" />Settings
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                    title="Delete Workspace"
+                  >
+                    <Trash2 size={15} className="mr-1.5" />Delete Workspace
+                  </Button>
+                </>
               )}
 
               {canCreateProject ? (
@@ -266,6 +287,12 @@ export default function WorkspaceDashboard() {
         <WorkspaceSettingsModal
           isOpen={isSettingsModalOpen}
           onClose={() => setIsSettingsModalOpen(false)}
+        />
+
+        <DeleteWorkspaceModal
+          workspace={workspace}
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
         />
       </div>
       );

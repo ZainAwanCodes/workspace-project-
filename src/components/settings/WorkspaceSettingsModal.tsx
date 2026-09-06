@@ -42,6 +42,9 @@ export const WorkspaceSettingsModal = ({ isOpen, onClose }: WorkspaceSettingsMod
   const navigate = useNavigate();
   
   const activeWorkspaceId = useAppSelector(state => state.workspaces.activeWorkspaceId);
+  const allWorkspaces = useAppSelector(state =>
+    state.workspaces.ids.map(id => state.workspaces.entities[id]!)
+  );
   const workspace = useAppSelector(state => 
     activeWorkspaceId ? state.workspaces.entities[activeWorkspaceId] : null
   );
@@ -131,14 +134,26 @@ export const WorkspaceSettingsModal = ({ isOpen, onClose }: WorkspaceSettingsMod
     setInviteRole('member');
   };
 
+  const isDeleteConfirmed = workspace
+    ? deleteConfirmation.trim().toLowerCase() === workspace.name.trim().toLowerCase()
+    : false;
+
   const handleDelete = () => {
-    if (!workspace) return;
-    if (deleteConfirmation !== workspace.name) return;
+    if (!workspace || !isDeleteConfirmed) return;
+
+    const remainingWorkspaces = allWorkspaces.filter(w => w.id !== workspace.id);
 
     dispatch(removeWorkspace(workspace.id));
-    dispatch(setActiveWorkspace(null));
     onClose();
-    navigate('/');
+
+    if (remainingWorkspaces.length > 0) {
+      const nextWorkspace = remainingWorkspaces[0];
+      dispatch(setActiveWorkspace(nextWorkspace.id));
+      navigate(`/w/${nextWorkspace.id}`);
+    } else {
+      dispatch(setActiveWorkspace(null));
+      navigate('/');
+    }
   };
 
   if (!workspace) return null;
@@ -413,7 +428,7 @@ export const WorkspaceSettingsModal = ({ isOpen, onClose }: WorkspaceSettingsMod
             <Button 
               variant="destructive" 
               className="w-full"
-              disabled={deleteConfirmation !== workspace.name}
+              disabled={!isDeleteConfirmed}
               onClick={handleDelete}
             >
               <Trash2 size={16} className="mr-2" />

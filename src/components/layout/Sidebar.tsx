@@ -6,15 +6,17 @@ import { setActiveViewMode, toggleTheme, setSidebarOpen } from '@/lib/redux/slic
 import {
   Kanban, List as ListIcon, Calendar,
   Moon, Sun, ChevronDown, ChevronRight, X, Check,
-  Plus, Settings, ArrowLeft
+  Plus, Settings, ArrowLeft, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from '../ui/Dropdown';
 import { useNavigate } from 'react-router-dom';
 import { DynamicIcon } from '@/utils/iconMap';
 import { CreateWorkspaceModal } from './CreateWorkspaceModal';
+import { DeleteWorkspaceModal } from './DeleteWorkspaceModal';
 import { CreateProjectModal } from '../settings/CreateProjectModal';
 import { WorkspaceSettingsModal } from '../settings/WorkspaceSettingsModal';
+import { Workspace } from '@/types/workspace';
 
 export const Sidebar = () => {
   const dispatch = useAppDispatch();
@@ -33,6 +35,7 @@ export const Sidebar = () => {
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [isWorkspaceSettingsOpen, setIsWorkspaceSettingsOpen] = useState(false);
+  const [workspaceToDelete, setWorkspaceToDelete] = useState<Workspace | null>(null);
 
   const closeOnMobile = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -94,9 +97,9 @@ export const Sidebar = () => {
                 <DropdownItem
                   key={w.id}
                   onClick={() => handleWorkspaceSwitch(w.id)}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between group/ws"
                 >
-                  <div className="flex items-center space-x-2.5 truncate">
+                  <div className="flex items-center space-x-2.5 truncate flex-1 min-w-0">
                     <div
                       className="w-5 h-5 rounded-md flex items-center justify-center text-white text-xs flex-shrink-0"
                       style={{ backgroundColor: w.color || 'var(--accent)' }}
@@ -105,7 +108,20 @@ export const Sidebar = () => {
                     </div>
                     <span className="truncate text-sm">{w.name}</span>
                   </div>
-                  {activeWorkspaceId === w.id && <Check size={14} style={{ color: 'var(--accent)' }} className="flex-shrink-0 ml-2" />}
+                  <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
+                    {activeWorkspaceId === w.id && <Check size={14} style={{ color: 'var(--accent)' }} />}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setWorkspaceToDelete(w);
+                      }}
+                      className="p-1 rounded opacity-0 group-hover/ws:opacity-100 hover:bg-red-50 dark:hover:bg-red-950/40 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-all"
+                      title="Delete Workspace"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </DropdownItem>
               ))}
 
@@ -332,6 +348,12 @@ export const Sidebar = () => {
       )}
 
       <WorkspaceSettingsModal isOpen={isWorkspaceSettingsOpen} onClose={() => setIsWorkspaceSettingsOpen(false)} />
+
+      <DeleteWorkspaceModal
+        workspace={workspaceToDelete}
+        isOpen={!!workspaceToDelete}
+        onClose={() => setWorkspaceToDelete(null)}
+      />
     </>
   );
 };
